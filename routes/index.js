@@ -4,7 +4,7 @@ const path = require("path");
 const router = express.Router();
 
 // Main page is protected by authentication middleware
-router.get("/", JWT.authenticaticateToken, (req, res) => {
+router.get("/", JWT.authenticateToken, (req, res) => {
     res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
