@@ -14,6 +14,7 @@ app.use(express.json());
 app.use("/", indexRoutes);
 app.use("/auth", authRoutes);
 app.use("/video", videoRoutes);
+app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
