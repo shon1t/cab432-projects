@@ -8,10 +8,7 @@ const videoRoutes = require("./routes/video");
 const app = express();
 const port = require("./config/config").PORT;
 
-const videoRoutes = require("./routes/video");
-
 app.use(express.json());
-app.use("/video", videoRoutes);
 
 // register routes
 app.use("/", indexRoutes);
