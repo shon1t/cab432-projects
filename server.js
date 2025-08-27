@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 
 const authRoutes = require("./routes/auth");
-//const indexRoutes = require("./routes/index");
+const indexRoutes = require("./routes/index");
 const videoRoutes = require("./routes/video");
 
 const app = express();
@@ -12,7 +12,7 @@ app.use(express.json());
 
 // register routes
 app.use("/", indexRoutes);
-//app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/video", videoRoutes);
 
 app.listen(port, () => {
