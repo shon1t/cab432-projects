@@ -16,6 +16,14 @@ app.use("/auth", authRoutes);
 app.use("/video", videoRoutes);
 app.use(express.static(path.join(__dirname, "public")));
 
+// Debug: List all registered routes
+app._router.stack.forEach(r => {
+  if (r.route && r.route.path) {
+    console.log(r.route.path, Object.keys(r.route.methods));
+  }
+});
+
+
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
