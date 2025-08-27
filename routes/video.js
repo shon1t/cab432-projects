@@ -6,7 +6,7 @@ const JWT = require("../jwt.js");
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-router.post("/upload", JWT.authenticaticateToken, upload.single("video"), (req, res) => {
+router.post("/upload", JWT.authenticateToken, upload.single("video"), (req, res) => {
     res.json( { message: "Video uploaded successfully", file: req.file });
 });
 
