@@ -8,7 +8,7 @@ if (loginForm) {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    const res = await fetch("/login", {
+    const res = await fetch("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -35,7 +35,7 @@ if (uploadForm) {
     const formData = new FormData();
     formData.append("video", fileInput.files[0]);
 
-    const res = await fetch("/upload", {
+    const res = await fetch("/video/upload", {
       method: "POST",
       headers: { "Authorization": `Bearer ${authToken}` },
       body: formData,

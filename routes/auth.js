@@ -13,12 +13,12 @@ const users = {
    },
    sean: {
         password: "12345",
-        admin: true,
+        admin: false,
    }
 }
 
 // User needs to login to obtain an authentication token
-router.post("/login", (req, res) => {
+router.post("/auth/login", (req, res) => {
    // Check the username and password
    const { username, password } = req.body;
    const user = users[username];
