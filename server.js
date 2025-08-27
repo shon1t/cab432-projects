@@ -14,6 +14,9 @@ app.use(express.json());
 app.use("/", indexRoutes);
 app.use("/auth", authRoutes);
 app.use("/video", videoRoutes);
+
+app.use("/outputs", express.static(path.join(__dirname, "outputs")));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 // Debug: List all registered routes

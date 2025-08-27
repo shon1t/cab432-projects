@@ -28,6 +28,8 @@ if (loginForm) {
 
 // Handle upload form
 const uploadForm = document.getElementById("uploadForm");
+const downloadLink = document.getElementById("downloadLink");
+
 if (uploadForm) {
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -44,6 +46,10 @@ if (uploadForm) {
     if (res.ok) {
       const data = await res.json();
       document.getElementById("status").innerText = `Uploaded! File: ${data.file.filename}`;
+
+      // Provide a download link for the uploaded file
+      const outputPath = `outputs/output.mp4`;
+      downloadLink.innerHTML = `<a href="${outputPath}" download>Download Transcoded Video</a>`;
     } else {
       document.getElementById("status").innerText = "Upload failed.";
     }
