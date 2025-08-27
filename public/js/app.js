@@ -34,24 +34,43 @@ if (uploadForm) {
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fileInput = document.getElementById("videoFile");
+    const formatSelect = document.getElementById("format");
+    const format = formatSelect.value;
+
     const formData = new FormData();
     formData.append("video", fileInput.files[0]);
 
-    const res = await fetch("/video/upload", {
+    // Upload video
+    const uploadRes = await fetch("/video/upload", {
       method: "POST",
       headers: { "Authorization": `Bearer ${authToken}` },
       body: formData,
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      document.getElementById("status").innerText = `Uploaded! File: ${data.file.filename}`;
-
-      // Provide a download link for the uploaded file
-      const outputPath = `outputs/output.mp4`;
-      downloadLink.innerHTML = `<a href="${outputPath}" download>Download Transcoded Video</a>`;
-    } else {
+    if (!uploadRes.ok) {
       document.getElementById("status").innerText = "Upload failed.";
+      return;
     }
-  });
+
+    const uploadData = await uploadRes.json();
+    const filename = uploadData.file.filename;
+
+    // transcode
+    const transcodeRes = await fetch("/video/transcode", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${authToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ filename, format }),
+    });
+
+    if (transcodeRes.ok) {
+      const transcodeData = await transcodeRes.json();
+      document.getElementById("status").innerText = "Transcoding complete!";
+      document.getElementById("downloadLink").innerHTML = `<a href="${transcodeData.output}" download>Download Video</a>`;
+      } else {
+        document.getElementById("status").innerText = "Transcoding failed.";
+      }
+    });
 }
