@@ -13,7 +13,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), (req, res)
 router.post("/transcode", JWT.authenticateToken, (req, res) => {
     const inputPath = "uploads/" + req.body.filename;
     const format = req.body.format || "mp4"; //default to mp4
-    const outputPath = "outputs/" + `${format}`;
+    const outputPath = "outputs/" + `transcoded_vedeo.${format}`;
 
     ffmpeg(inputPath)
         .output(outputPath)
