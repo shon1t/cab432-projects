@@ -13,6 +13,8 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+RUN apk add --no-cache ffmpeg
+
 EXPOSE 3000
 
 CMD [ "node", "index.js" ]
