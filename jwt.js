@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
-const { tokenSecret } = require("./config/config");
+
+// Use a fixed authentication key (improve this later)
+const tokenSecret = require("./config/config").TOKEN_SECRET;
 
 // Create a token with username embedded, setting the validity period.
 const generateAccessToken = (username) => {
-   return jwt.sign({ username }, tokenSecret, { expiresIn: "30m" });
+   return jwt.sign(username, tokenSecret, { expiresIn: "30m" });
 };
 
 // Middleware to verify a token and respond with user information
