@@ -18,7 +18,7 @@ const users = {
 }
 
 // User needs to login to obtain an authentication token
-router.post("/login", (req, res) => {
+router.post("/login", (req, res) => { // /auth/login
    // Check the username and password
    const { username, password } = req.body;
    const user = users[username];

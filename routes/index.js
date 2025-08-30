@@ -14,7 +14,7 @@ router.get("/video", JWT.authenticateToken, (req, res) => {
 });
 
 // Admin page only accessible for users with admin role
-router.get("/about", JWT.authenticateToken, (req, res) => {
+router.get("/admin", JWT.authenticateToken, (req, res) => {
     if (req.user.username !== "admin") return res.sendStatus(403);
     res.sendFile(path.join(__dirname, "../public/admin.html"));
 });

@@ -13,12 +13,13 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), (req, res)
 router.post("/transcode", JWT.authenticateToken, (req, res) => {
     const inputPath = "uploads/" + req.body.filename; //save uploaded video ni /uploads
     const format = req.body.format || "mp4"; //default to mp4
-    const outputPath = "outputs/" + `transcoded.${format}`; //save transcoded video in outputs
+    const outputPath = "outputs/" + `transcoded.${format}`; //save transcoded video in /outputs
 
     ffmpeg(inputPath)
         .output(outputPath)
         .videoCodec("libx264")
-        .size("1280x720")
+        .size("1280x720") // resize and default to 720p
+        .format(format)
         .on("end", () => {
             res.json({ message: "Video transcoded successfully", output: outputPath });
         })
