@@ -80,15 +80,13 @@ const adminButton = document.getElementById("adminButton");
 
 if (adminButton) {
   adminButton.addEventListener("click", async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
+    if (!authToken) {
       alert("You must be logged in first.");
       return;
     }
-    console.log(localStorage.getItem("authToken"));
     const buttonRes = await fetch("/admin", {
       method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${authToken}` }
     });
 
     if (buttonRes.ok) {
