@@ -74,3 +74,27 @@ if (uploadForm) {
       }
     });
 }
+
+// Handle admin button 
+const adminButton = document.getElementById("adminButton");
+
+if (adminButton) {
+  adminButton.addEventListener("click", async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      alert("You must be logged in first.");
+      return;
+    }
+
+    const res = await fetch("/admin", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      window.location.href = "/admin";
+    } else {
+      alert("Unauthorized — only admins can access this page.");
+    }
+  });
+}

@@ -22,24 +22,6 @@
   <p id="downloadLink"></p>
 
   <button id="adminBtn">Go to Admin Page</button>
-  <script>
-    // Redirect to /admin when the button is clicked
-    document.getElementById("adminBtn").addEventListener("click", async () => {
-      const token = localStorage.getItem("authToken");
-      
-      const res = await fetch("/admin", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        // if authorised, redirect to admin.html
-        window.location.href = "/admin";
-
-      } else {
-        alert("Unauthorized: You are not an admin.") 
-      }
-    });
-  </script>
 
   <script src="js/app.js"></script>
 </body>
