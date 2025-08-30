@@ -6,10 +6,12 @@ const JWT = require("../jwt.js");
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
+// Upload endpoint, requires authentication
 router.post("/upload", JWT.authenticateToken, upload.single("video"), (req, res) => {
     res.json( { message: "Video uploaded successfully", file: req.file });
 });
 
+// Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, (req, res) => {
     const inputPath = "uploads/" + req.body.filename; //save uploaded video ni /uploads
     const format = req.body.format || "mp4"; //default to mp4

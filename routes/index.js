@@ -8,8 +8,8 @@ router.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
-// Video page accessable with users that have logged in
-router.get("/video", JWT.authenticateToken, (req, res) => {
+// Video page accessable to EVERYONE
+router.get("/video", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/upload.html"));
 });
 

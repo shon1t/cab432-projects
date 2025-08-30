@@ -26,10 +26,6 @@ if (loginForm) {
   });
 }
 
-const videoRes = await fetch("/video", {
-      headers:{ "Authorization": `Bearer ${authToken}` }
-    })
-
 // Handle upload form
 const uploadForm = document.getElementById("uploadForm");
 const downloadLink = document.getElementById("downloadLink");
