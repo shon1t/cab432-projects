@@ -80,19 +80,36 @@ const adminButton = document.getElementById("adminButton");
 
 if (adminButton) {
   adminButton.addEventListener("click", async () => {
-    if (!authToken) {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
       alert("You must be logged in first.");
       return;
     }
     const buttonRes = await fetch("/admin", {
       method: "GET",
-      headers: { "Authorization": `Bearer ${authToken}` }
+      headers: { "Authorization": `Bearer ${token}` }
     });
 
     if (buttonRes.ok) {
       window.location.href = "/admin";
     } else {
-      alert("Unauthorized — only admins can access this page.");
+      alert("Forbidden — only admins can access this page.");
     }
+  });
+}
+
+// Handle logout button
+const logoutButton = document.getElementById("logoutButton");
+
+if (logoutButton) {
+  logoutButton.addEventListener("click", () => {
+    // Remove the JWT from localStorage
+    localStorage.removeItem("authToken");
+
+    // Optionally clear any UI elements or status messages
+    document.getElementById("status").innerText = "";
+
+    // Redirect user to login page
+    window.location.href = "/";
   });
 }
