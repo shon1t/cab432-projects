@@ -85,15 +85,27 @@ if (adminButton) {
       alert("You must be logged in first.");
       return;
     }
-    const buttonRes = await fetch("/admin", {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${token}` }
-    });
 
-    if (buttonRes.ok) {
-      window.location.href = "/admin";
-    } else {
-      alert("Forbidden — only admins can access this page.");
+    try {
+      const buttonRes = await fetch("/admin", {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (buttonRes.ok) {
+        const html = await buttonRes.text();
+
+        document.open();
+        document.write(html);
+        document.close();
+
+      } else if (buttonRes.status === 403) {
+        alert("Forbidden — only admins can access this page.");
+      } else if (buttoneRes.status === 401){
+        alert("Your session has expired ot your token is invalid.")
+      }
+    } catch (error) {
+      console.error("Error accessing admin page:", error);
+      alert("An error occurred while trying to access the admin page.");
     }
   });
 }
