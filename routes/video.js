@@ -15,9 +15,16 @@ router.post("/transcode", JWT.authenticateToken, (req, res) => {
     const format = req.body.format || "mp4"; //default to mp4
     const outputPath = "outputs/" + `transcoded.${format}`; //save transcoded video in /outputs
 
-    ffmpeg(inputPath)
-        .output(outputPath)
-        .videoCodec("libx264")
+    const command = ffmpeg(inputPath).output(outputPath);
+
+    // change codecs depending on format
+    if (format === "webm") {
+        command.videoCodec("libvpx-vp9").audioCodec("libopus");
+    } else{
+        command.videoCodec("libx264").audioCodec("aac");
+    }
+    
+    command
         .size("1280x720") // resize and default to 720p
         .format(format)
         .on("end", () => {
