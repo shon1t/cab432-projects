@@ -19,7 +19,7 @@ if (loginForm) {
       authToken = data.authToken;
       localStorage.setItem("authToken", authToken);
       document.getElementById("message").innerText = "Login successful!";
-      window.location.href = "/upload.html";
+      window.location.href = "/video";
     } else {
       document.getElementById("message").innerText = "Login failed.";
     }
