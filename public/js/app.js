@@ -85,13 +85,13 @@ if (adminButton) {
       alert("You must be logged in first.");
       return;
     }
-
-    const res = await fetch("/admin", {
+    console.log(localStorage.getItem("authToken"));
+    const buttonRes = await fetch("/admin", {
       method: "GET",
       headers: { "Authorization": `Bearer ${token}` }
     });
 
-    if (res.ok) {
+    if (buttonRes.ok) {
       window.location.href = "/admin";
     } else {
       alert("Unauthorized — only admins can access this page.");

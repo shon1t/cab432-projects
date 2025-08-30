@@ -15,6 +15,7 @@ router.get("/video", JWT.authenticateToken, (req, res) => {
 
 // Admin page only accessible for users with admin role
 router.get("/admin", JWT.authenticateToken, (req, res) => {
+    console.log("Authorization header:", req.headers["authorization"]);
     if (req.user.username !== "admin") return res.sendStatus(403);
     res.sendFile(path.join(__dirname, "../public/admin.html"));
 });
