@@ -12,8 +12,8 @@ const users = {
       admin: true,
    },
    sean: {
-        password: "12345",
-        admin: false,
+      password: "12345",
+      admin: false,
    }
 }
 
