@@ -5,8 +5,7 @@ const JWT = require("../jwt.js");
 
 const path = require("path");
 const fs = require("fs");
-const { uploadToS3, BUCKET } = require("../utils/s3");
-const { S3Client, GetObjectCommand, downloadUrl } = require("@aws-sdk/client-s3");
+const { uploadToS3, getDownloadUrl, BUCKET } = require("../utils/s3");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });

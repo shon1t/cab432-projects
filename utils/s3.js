@@ -1,6 +1,6 @@
 const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { get } = require("../routes");
+//const { get } = require("../routes");
 
 const s3 = new S3Client({ region: "ap-southeast-2" });
 const BUCKET = "a2-n11077417-bucket";
@@ -13,7 +13,7 @@ async function uploadToS3(key, fileStream) {
         Body: fileStream,
     });
     await s3.send(command);
-    return `s3://${BUCKET}/${key}`;
+    return key;
 }
 
 // generate a download url
