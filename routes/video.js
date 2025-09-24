@@ -6,7 +6,7 @@ const JWT = require("../jwt.js");
 const path = require("path");
 const fs = require("fs");
 const { uploadToS3, BUCKET } = require("../utils/s3");
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, getDownloadUrl, GetObjectCommand } = require("@aws-sdk/client-s3");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -28,31 +28,29 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
             key: s3Key
         });
     } catch (error) {
-        console.error("Upload error:", err);
+        console.error("Upload error:", error);
         res.status(500).json({error: "Upload to S3 failed" })
     }
 });
 
 // Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
-    const inputKey = `input/${req.body.filename}`;
+    const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
-    const outputFile = `transcoded-${Date.now()}.${format}`;
-    const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
+    const inputPath = path.join("/tmp", `input-${Date.now()}`);
+    const outputPath = path.join("/tmp", `transcoded-${Date.now()}.${format}`);
 
     try {
         // Download input from S3 to /tmp
         const command = new GetObjectCommand({ Bucket: BUCKET, Key: inputKey });
         const data = await s3.send(command);
-        const writeStream = fs.createWriteStream(outputPath.replace("transcoded", "input-temp"));
         await new Promise((resolve, reject) => {
-            data.Body.pipe(writeStream)
+            data.Body.pipe(fs.createWriteStream(inputPath))
                 .on("finish", resolve)
                 .on("error", reject);
         });
 
         // run ffmpeg 
-        const inputPath = outputPath.replace("transcoded", "input-temp");
         const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
 
         if (format === "webm") {
@@ -67,7 +65,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
             .on("end", async () => {
                 // Upload transcoded file to S3
                 const fileStream = fs.createReadStream(outputPath);
-                const s3Key = `output/${outputFile}`;
+                const s3Key = `output/${path.basename(outputPath)}`;
                 await uploadToS3(BUCKET, s3Key, fileStream);
 
                 // Cleanup
@@ -85,8 +83,8 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
             })
             .run();
 
-    } catch (err) {
-        console.error("Transcoding error:", err);
+    } catch (error) {
+        console.error("Transcoding error:", error);
         res.status(500).json({ error: "Could not process video" });
     }
 });
