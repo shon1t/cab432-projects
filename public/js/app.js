@@ -53,7 +53,7 @@ if (uploadForm) {
     }
     
     const uploadData = await uploadRes.json();
-    const filename = uploadData.file.filename;
+    const s3Key = uploadData.s3Key;
 
     // transcode
     const transcodeRes = await fetch("/video/transcode", {
@@ -62,13 +62,13 @@ if (uploadForm) {
         "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ filename, format }),
+      body: JSON.stringify({ s3Key, format }),
     });
 
     if (transcodeRes.ok) {
       const transcodeData = await transcodeRes.json();
       document.getElementById("status").innerText = "Transcoding complete!";
-      document.getElementById("downloadLink").innerHTML = `<a href="${transcodeData.output}" download>Download Video</a>`;
+      document.getElementById("downloadLink").innerHTML = `<a href="${transcodeData.downloadUrl}" download>Download Video</a>`;
       } else {
         document.getElementById("status").innerText = "Transcoding failed.";
       }
@@ -100,7 +100,7 @@ if (adminButton) {
 
       } else if (buttonRes.status === 403) {
         alert("Forbidden — only admins can access this page.");
-      } else if (buttoneRes.status === 401){
+      } else if (buttonRes.status === 401){
         alert("Your session has expired ot your token is invalid.")
       }
     } catch (error) {
