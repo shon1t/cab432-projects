@@ -25,7 +25,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
         fs.unlinkSync(req.file.path);
         res.json({ 
             message: "Upload to S3 successful", 
-            key: s3Key
+            s3key: s3Key
         });
     } catch (error) {
         console.error("Upload error:", error);
@@ -35,13 +35,16 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
 // Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
-    const inputKey = `input/${req.body.filename}`;
+    const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
     const outputFile = `transcoded-${Date.now()}.${format}`;
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
 
+    console.log("Transcode request body:", req.body);
+
     try {
         // Download input from S3 to /tmp
+        
         const command = new GetObjectCommand({ Bucket: BUCKET, Key: inputKey });
         const data = await s3.send(command);
         const writeStream = fs.createWriteStream(outputPath.replace("transcoded", "input-temp"));
