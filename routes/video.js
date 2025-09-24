@@ -6,7 +6,7 @@ const JWT = require("../jwt.js");
 const path = require("path");
 const fs = require("fs");
 const { uploadToS3, BUCKET } = require("../utils/s3");
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand, downloadUrl } = require("@aws-sdk/client-s3");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -28,7 +28,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
             key: s3Key
         });
     } catch (error) {
-        console.error("Upload error:", err);
+        console.error("Upload error:", error);
         res.status(500).json({error: "Upload to S3 failed" })
     }
 });
@@ -37,7 +37,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
     const inputKey = `input/${req.body.filename}`;
     const format = req.body.format || "mp4";
-    const outputFile = `transcoded.${format}`;
+    const outputFile = `transcoded-${Date.now()}.${format}`;
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
 
     try {
