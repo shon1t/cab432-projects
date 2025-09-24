@@ -53,8 +53,13 @@ if (uploadForm) {
     }
     
     const uploadData = await uploadRes.json();
-    //const filename = uploadData.file.filename;
-    const s3Key = uploadData.s3Key;
+    console.log("Upload response:", uploadData);  // debug
+
+    const s3Key = uploadData.s3Key;   // must exist now
+    if (!s3Key) {
+      document.getElementById("status").innerText = "Upload did not return a key.";
+      return;
+    }
 
     // transcode
     const transcodeRes = await fetch("/video/transcode", {
