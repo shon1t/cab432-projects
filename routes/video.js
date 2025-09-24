@@ -35,7 +35,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
 // Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
-    const inputKey = req.body.s3Key;
+    const inputKey = `input/${req.body.filename}`;
     const format = req.body.format || "mp4";
     const outputFile = `transcoded-${Date.now()}.${format}`;
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
@@ -51,7 +51,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 .on("error", reject);
         });
 
-        // run ffmpeg to transcode
+        // run ffmpeg 
         const inputPath = outputPath.replace("transcoded", "input-temp");
         const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
 
