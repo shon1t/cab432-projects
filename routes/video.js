@@ -25,7 +25,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
         fs.unlinkSync(req.file.path);
         res.json({ 
             message: "Upload to S3 successful", 
-            s3key: s3Key
+            s3Key: s3Key
         });
     } catch (error) {
         console.error("Upload error:", error);
