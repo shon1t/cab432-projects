@@ -10,8 +10,6 @@ const { uploadToS3, getDownloadUrl, BUCKET } = require("../utils/s3.js");
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-const s3 = new S3Client({ region: "ap-southeast-2" });
-
 // Upload to s3 endpoint, requires authentication
 router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req, res) => {
     //res.json( { message: "Video uploaded successfully", file: req.file });
@@ -37,24 +35,16 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
     const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
     const outputFile = `transcoded-${Date.now()}.${format}`;
+    const inputPath = path.join("/tmp", `input-temp-${Date.now()}`);
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
 
     console.log("Transcode request body:", req.body);
 
     try {
         // Download input from S3 to /tmp
-        
-        const command = new GetObjectCommand({ Bucket: BUCKET, Key: inputKey });
-        const data = await s3.send(command);
-        const writeStream = fs.createWriteStream(outputPath.replace("transcoded", "input-temp"));
-        await new Promise((resolve, reject) => {
-            data.Body.pipe(writeStream)
-                .on("finish", resolve)
-                .on("error", reject);
-        });
+        await downloadFromS3(inputKey, inputPath);
 
         // Run FFmpeg
-        const inputPath = outputPath.replace("transcoded", "input-temp");
         const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
 
         if (format === "webm") {
