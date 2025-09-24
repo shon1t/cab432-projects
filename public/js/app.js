@@ -53,7 +53,8 @@ if (uploadForm) {
     }
     
     const uploadData = await uploadRes.json();
-    const filename = uploadData.file.filename;
+    const filename = uploadData.file;
+    const s3Key = uploadData.s3Key;
 
     // transcode
     const transcodeRes = await fetch("/video/transcode", {
@@ -62,7 +63,7 @@ if (uploadForm) {
         "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ filename, format }),
+      body: JSON.stringify({ s3Key, format }),
     });
 
     if (transcodeRes.ok) {

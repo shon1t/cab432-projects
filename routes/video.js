@@ -19,7 +19,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
     try {
         const fileStream = fs.createReadStream(req.file.path);
         const s3Key = `input/${req.file.originalname}`;
-        await uploadToS3(s3Key, fileStream);
+        await uploadToS3(BUCKET, s3Key, fileStream);
 
         // cleanup local temp file
         fs.unlinkSync(req.file.path);
@@ -35,9 +35,9 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
 // Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
-    const inputKey = `input/${req.body.filename}`;
+    const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
-    const outputFile = `transcoded.${format}`;
+    const outputFile = `transcoded-${Date.now()}.${format}`;
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
 
     try {
@@ -51,7 +51,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 .on("error", reject);
         });
 
-        // Run FFmpeg
+        // run ffmpeg to transcode
         const inputPath = outputPath.replace("transcoded", "input-temp");
         const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
 
@@ -68,7 +68,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 // Upload transcoded file to S3
                 const fileStream = fs.createReadStream(outputPath);
                 const s3Key = `output/${outputFile}`;
-                await uploadToS3(s3Key, fileStream);
+                await uploadToS3(BUCKET, s3Key, fileStream);
 
                 // Cleanup
                 fs.unlinkSync(inputPath);
