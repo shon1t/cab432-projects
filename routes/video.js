@@ -35,22 +35,25 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
 // Transcode endpoint, requires authentication
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
-    const inputKey = req.body.s3Key;
+    const inputKey = req.body.s3Key;  
     const format = req.body.format || "mp4";
-    const inputPath = path.join("/tmp", `input-${Date.now()}`);
-    const outputPath = path.join("/tmp", `transcoded-${Date.now()}.${format}`);
+    const outputFile = `transcoded-${Date.now()}.${format}`;
+    const outputPath = path.join("/tmp", outputFile);
 
     try {
-        // Download input from S3 to /tmp
+        // Download input from S3
         const command = new GetObjectCommand({ Bucket: BUCKET, Key: inputKey });
         const data = await s3.send(command);
+        const inputPath = outputPath.replace("transcoded", "input-temp");
+        const writeStream = fs.createWriteStream(inputPath);
+
         await new Promise((resolve, reject) => {
-            data.Body.pipe(fs.createWriteStream(inputPath))
+            data.Body.pipe(writeStream)
                 .on("finish", resolve)
                 .on("error", reject);
         });
 
-        // run ffmpeg 
+        // Run ffmpeg
         const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
 
         if (format === "webm") {
@@ -63,18 +66,16 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
             .size("1280x720")
             .format(format)
             .on("end", async () => {
-                // Upload transcoded file to S3
+                // Upload to S3
                 const fileStream = fs.createReadStream(outputPath);
-                const s3Key = `output/${path.basename(outputPath)}`;
+                const s3Key = `output/${outputFile}`;
                 await uploadToS3(BUCKET, s3Key, fileStream);
 
                 // Cleanup
                 fs.unlinkSync(inputPath);
                 fs.unlinkSync(outputPath);
 
-                // Generate signed URL
                 const url = await getDownloadUrl(s3Key);
-
                 res.json({ message: "Video transcoded successfully", downloadUrl: url });
             })
             .on("error", (err) => {
@@ -83,10 +84,11 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
             })
             .run();
 
-    } catch (error) {
-        console.error("Transcoding error:", error);
+    } catch (err) {
+        console.error("Transcoding error:", err);
         res.status(500).json({ error: "Could not process video" });
     }
 });
+
 
 module.exports = router;
