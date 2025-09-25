@@ -22,7 +22,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
         // cleanup local temp file
         fs.unlinkSync(req.file.path);
 
-        console.log("Updating DynamoDB:", { userId, videoId, format }); // debug dynamodb
+        console.log("Updating DynamoDB:", { owner, videoId, format }); // debug dynamodb
 
         // save metadata to DynamoDB
         const videoId = await saveVideoMetadata({
@@ -77,7 +77,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 fs.unlinkSync(inputPath);
                 fs.unlinkSync(outputPath);
 
-                console.log("Updating DynamoDB:", { userId, videoId, format }); // debug dynamodb
+                console.log("Updating DynamoDB:", { owner, videoId, format }); // debug dynamodb
 
                 // update metadata in dyanamo
                 await updateVideoMetadata(req.body.videoId, {
