@@ -26,7 +26,7 @@ async function updateVideoMetadata(videoId, { s3OutputKey, format, status }) {
     const command = new UpdateItemCommand({
         TableName: TABLE,
         Key: { videoId: { S: videoId } },
-        UpdateExpression: "SET s3OutputKey = :o, format = :f, #st = :s",
+        UpdateExpression: "SET s3OutputKey = :o, videoFormat = :f, #st = :s",
         ExpressionAttributeNames: { "#st": "status" },
         ExpressionAttributeValues: {
             ":o": { S: s3OutputKey },
@@ -55,7 +55,7 @@ async function getUserVideos(owner) {
         videoId: item.videoId.S,
         s3InputKey: item.s3InputKey?.S,
         s3OutputKey: item.s3OutputKey?.S || null,
-        format: item.format?.S || null,
+        videoFormat: item.format?.S || null,
         status: item.status.S,
         createdAt: item.createdAt.S
     }));
