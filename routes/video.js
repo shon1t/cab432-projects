@@ -22,13 +22,14 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
         // cleanup local temp file
         fs.unlinkSync(req.file.path);
 
+        const owner = req.user.username; // get user from JWT middleware
         // save metadata to DynamoDB
         const videoId = await saveVideoMetadata({
             s3Key,
-            owner: req.user.username // get user from JWT middleware
+            owner // get user from JWT middleware
         });
 
-        console.log("Updating DynamoDB:", { owner, videoId, format }); // debug dynamodb
+        console.log("Updating DynamoDB:", { owner, videoId, s3Key }); // debug dynamodb
 
         res.json({ 
             message: "Upload to S3 successful", 
