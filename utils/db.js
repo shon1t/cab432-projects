@@ -22,7 +22,7 @@ async function saveVideoMetadata({ s3Key, owner }) {
 }
 
 // Update metadata after transcoding
-async function updateVideoMetadata(videoId, { s3OutputKey, format, status }) {
+async function updateVideoMetadata(owner, videoId, { s3OutputKey, format, status }) {
     const command = new UpdateItemCommand({
         TableName: TABLE,
         Key: { 
