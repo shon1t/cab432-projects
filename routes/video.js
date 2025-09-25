@@ -97,7 +97,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                     });
 
                 // update metadata in dyanamo
-                await updateVideoMetadata(req.body.username, req.body.videoId, {
+                await updateVideoMetadata(req.user.username, req.body.videoId, {
                     s3OutputKey: s3Key,
                     format: format,
                     status: "done"
