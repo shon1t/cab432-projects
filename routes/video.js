@@ -57,6 +57,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
     const outputFile = `transcoded-${Date.now()}.${format}`;
     const inputPath = path.join("/tmp", `input-temp-${Date.now()}`);
     const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
+    const videoId = req.body.videoId;
 
     console.log("Transcode request body:", req.body);
 
@@ -90,7 +91,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 // update metadata in dyanamo
                 await updateVideoMetadata(req.body.videoId, {
                     s3OutputKey: s3Key,
-                    format: format,
+                    format,
                     status: "done"
                 })
 

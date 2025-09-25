@@ -56,6 +56,8 @@ if (uploadForm) {
     console.log("Upload response:", uploadData);  // debug
 
     const s3Key = uploadData.s3Key;   // must exist now
+    const videoId = uploadData.videoId; 
+
     if (!s3Key) {
       document.getElementById("status").innerText = "Upload did not return a key.";
       return;
@@ -68,7 +70,7 @@ if (uploadForm) {
         "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ s3Key, format }), // was filename, format
+      body: JSON.stringify({ s3Key, format, videoId }), // was filename, format
     });
 
     if (transcodeRes.ok) {
