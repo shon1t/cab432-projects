@@ -89,7 +89,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
 
 
                 console.log("Update metadata call:", {
-                    owner: req.user,
+                    owner: req.user.username,
                     videoId: req.body.videoId,
                     s3OutputKey: s3Key,
                     format,
@@ -103,7 +103,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                     status: "done"
                 })
 
-                console.log("Updating DynamoDB:", { owner, videoId: req.body.videoId, format }); // debug dynamodb
+                console.log("Updating DynamoDB:", { owner: req.user.username, videoId: req.body.videoId, format }); // debug dynamodb
 
                 // Generate signed URL
                 const url = await getDownloadUrl(s3Key);
