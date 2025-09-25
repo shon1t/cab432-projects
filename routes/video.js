@@ -6,6 +6,7 @@ const JWT = require("../jwt.js");
 const path = require("path");
 const fs = require("fs");
 const { uploadToS3, getDownloadUrl, downloadFromS3, BUCKET } = require("../utils/s3.js");
+const { saveVideoMetadata, updateVideoMetadata, getUserVideos } = require("../utils/db.js");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -20,9 +21,17 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
         // cleanup local temp file
         fs.unlinkSync(req.file.path);
+
+        // save metadata to DynamoDB
+        const videoId = await saveVideoMetadata({
+            s3Key,
+            owner: req.user.username // get user from JWT middleware
+        });
+
         res.json({ 
             message: "Upload to S3 successful", 
-            s3Key: s3Key
+            s3Key: s3Key,
+            videoId: videoId
         });
     } catch (error) {
         console.error("Upload error:", error);
@@ -66,9 +75,15 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
                 fs.unlinkSync(inputPath);
                 fs.unlinkSync(outputPath);
 
+                // update metadata in dyanamo
+                await updateVideoMetadata(req.body.videoId, {
+                    s3OutputKey: s3Key,
+                    format: format,
+                    status: "done"
+                })
+
                 // Generate signed URL
                 const url = await getDownloadUrl(s3Key);
-
                 res.json({ message: "Video transcoded successfully", downloadUrl: url });
             })
             .on("error", (err) => {
@@ -80,6 +95,17 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
     } catch (err) {
         console.error("Transcoding error:", err);
         res.status(500).json({ error: "Could not process video" });
+    }
+});
+
+// Get all videos for logged-in user
+router.get("/videos", JWT.authenticateToken, async (req, res) => {
+    try {
+        const videos = await getUserVideos(req.user.username);
+        res.json({ videos });
+    } catch (err) {
+        console.error("Error fetching videos:", err);
+        res.status(500).json({ error: "Could not fetch videos" });
     }
 });
 

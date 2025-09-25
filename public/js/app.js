@@ -116,6 +116,46 @@ if (adminButton) {
   });
 }
 
+// Fetch and display user's videos
+async function loadVideos() {
+  const token = localStorage.getItem("authToken");
+  if (!token) return;
+
+  try {
+    const res = await fetch("/video/list", {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      console.error("Failed to fetch videos");
+      return;
+    }
+
+    const videos = await res.json();
+    const listDiv = document.getElementById("videoList");
+
+    if (!listDiv) return;
+
+    listDiv.innerHTML = "";
+    videos.forEach(video => {
+      const item = document.createElement("div");
+      item.innerHTML = `
+        <p><b>${video.videoId}</b> (${video.format}, ${video.status})</p>
+        ${video.s3KeyOutput ? `<a href="${video.downloadUrl}" target="_blank">Download</a>` : ""}
+      `;
+      listDiv.appendChild(item);
+    });
+  } catch (err) {
+    console.error("Error loading videos:", err);
+  }
+}
+
+// Run this automatically when user is on the /video page
+if (window.location.pathname === "/video") {
+  loadVideos();
+}
+
 // Handle logout button
 const logoutButton = document.getElementById("logoutButton");
 
