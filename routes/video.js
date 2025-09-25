@@ -24,12 +24,13 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
         console.log("JWT user:", req.user); // check if req.user exists
 
+        const owner = req.user.username; // get user from JWT middleware
         // save metadata to DynamoDB
         let videoId;
         try {
             videoId = await saveVideoMetadata({ 
                 s3Key, 
-                owner: req.user.username // get user from JWT middleware 
+                owner // get user from JWT middleware 
             });
         } catch (err) {
             console.error("Error saving metadata to DynamoDB:", err);
