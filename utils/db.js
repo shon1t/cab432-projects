@@ -25,7 +25,10 @@ async function saveVideoMetadata({ s3Key, owner }) {
 async function updateVideoMetadata(videoId, { s3OutputKey, format, status }) {
     const command = new UpdateItemCommand({
         TableName: TABLE,
-        Key: { videoId: { S: videoId } },
+        Key: { 
+            owner: { S: owner },
+            videoId: { S: videoId } 
+        },
         UpdateExpression: "SET s3OutputKey = :o, videoFormat = :f, #st = :s",
         ExpressionAttributeNames: { "#st": "status" },
         ExpressionAttributeValues: {

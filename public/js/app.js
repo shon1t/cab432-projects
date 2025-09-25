@@ -55,7 +55,7 @@ if (uploadForm) {
     const uploadData = await uploadRes.json();
     console.log("Upload response:", uploadData);  // debug
 
-    const s3Key = uploadData.s3Key;   // must exist now
+    const s3Key = uploadData.s3Key; 
     const videoId = uploadData.videoId; 
 
     if (!s3Key) {
