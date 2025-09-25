@@ -11,7 +11,7 @@ async function saveVideoMetadata({ s3Key, owner }) {
         TableName: TABLE,
         Item: {
             videoId: { S: videoId },
-            s3InputKey: { S: s3Key },
+            s3Key: { S: s3Key },
             status: { S: "uploaded" },
             owner: { S: owner },
             createdAt: { S: new Date().toISOString() }
