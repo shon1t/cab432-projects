@@ -5,13 +5,13 @@ const db = new DynamoDBClient({ region: "ap-southeast-2" });
 const TABLE = "a2-n11077417-videodata"; 
 
 // Save metadata for a new upload
-async function saveVideoMetadata({ s3Key, owner }) {
+async function saveVideoMetadata({ s3OutputKey, owner }) {
     const videoId = uuidv4();
     const command = new PutItemCommand({
         TableName: TABLE,
         Item: {
             videoId: { S: videoId },
-            s3Key: { S: s3Key },
+            s3OutputKey: { S: s3OutputKey },
             status: { S: "uploaded" },
             owner: { S: owner },
             createdAt: { S: new Date().toISOString() }
@@ -58,7 +58,7 @@ async function getUserVideos(owner) {
         videoId: item.videoId.S,
         s3InputKey: item.s3InputKey?.S,
         s3OutputKey: item.s3OutputKey?.S || null,
-        videoFormat: item.format?.S || null,
+        videoFormat: item.videoFormat?.S || null,
         status: item.status.S,
         createdAt: item.createdAt.S
     }));
