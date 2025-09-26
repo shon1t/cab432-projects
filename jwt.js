@@ -1,24 +1,43 @@
-const { CognitoJwtVerifier } = require("cognito-jwt-verifier");
+const jwt = require("jsonwebtoken");
 
-const verifier = CognitoJwtVerifier.create({
-  userPoolId: process.env.COGNITO_USER_POOL_ID,
-  tokenUse: "access", // or "id"
-  clientId: process.env.COGNITO_CLIENT_ID,
-});
+// Use a fixed authentication key (improve this later)
+const tokenSecret = require("./config/config").TOKEN_SECRET;
 
-async function authenticateToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401);
+// Create a token with username embedded, setting the validity period.
+const generateAccessToken = (user) => {
+   return jwt.sign({ username: user.username }, tokenSecret, { expiresIn: "30m" });
+};
 
-  try {
-    const payload = await verifier.verify(token);
-    req.user = payload; // contains username, sub, email, etc.
-    next();
-  } catch (err) {
-    console.error("Token verification failed:", err);
-    res.sendStatus(403);
-  }
-}
+// Middleware to verify a token and respond with user information
+const authenticateToken = (req, res, next) => {
+   // We are using Bearer auth.  The token is in the authorization header.
+   const authHeader = req.headers["authorization"];
+   const token = authHeader && authHeader.split(' ')[1];
 
-module.exports = { authenticateToken };
+   if (!token) {
+      console.log("JSON web token missing.");
+      return res.sendStatus(401);
+   }
+
+   // Check that the token is valid
+   try {
+      const user = jwt.verify(token, tokenSecret);
+
+      console.log(
+         `authToken verified for user: ${user.username} at URL ${req.url}`
+      );
+
+      // Add user info to the request for the next handler
+      req.user = user;
+      next();
+   } catch (err) {
+      console.log(
+         `JWT verification failed at URL ${req.url}`,
+         err.name,
+         err.message
+      );
+      return res.sendStatus(401);
+   }
+};
+
+module.exports = { generateAccessToken, authenticateToken };
