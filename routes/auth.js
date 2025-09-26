@@ -34,19 +34,30 @@ router.post("/login", async (req, res) => {
     AuthParameters: {
       USERNAME: username,
       PASSWORD: password,
-      SECRET_HASH: getSecretHash(username),
-    },
+      ...(CLIENT_SECRET ? { SECRET_HASH: getSecretHash(username) } : {})
+    }
   };
 
   try {
-    const command = new InitiateAuthCommand(params);
-    const response = await cognito.send(command);
+    const response = await cognito.initiateAuth(params).promise();
 
-    res.json({ authToken: response.AuthenticationResult.IdToken });
+    if (response.AuthenticationResult) {
+      // Login success 🎉
+      res.json({ authToken: response.AuthenticationResult.IdToken });
+    } else if (response.ChallengeName) {
+      // Login not complete
+      res.status(401).json({
+        error: `Challenge required: ${response.ChallengeName}`,
+        details: response
+      });
+    } else {
+      res.status(401).json({ error: "Login failed, unknown response", details: response });
+    }
   } catch (err) {
     console.error("Cognito login error:", err);
     res.status(401).json({ error: err.message || JSON.stringify(err) });
   }
 });
+
 
 module.exports = router;
