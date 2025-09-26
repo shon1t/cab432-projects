@@ -26,6 +26,23 @@ if (loginForm) {
   });
 }
 
+//Handle register form
+registerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("regUsername").value;
+  const password = document.getElementById("regPassword").value;
+  const email = document.getElementById("regEmail").value;
+
+  const res = await fetch("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, email })
+  });
+
+  const data = await res.json();
+  document.getElementById("registerMessage").innerText = data.message || data.error;
+});
+
 // Handle upload form
 const uploadForm = document.getElementById("uploadForm");
 const downloadLink = document.getElementById("downloadLink");
