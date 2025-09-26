@@ -121,10 +121,14 @@ if (adminButton) {
 // Fetch and display user's videos
 async function loadVideos() {
   const token = localStorage.getItem("authToken");
-  if (!token) return;
+  if (!token) {
+    alert("You must be logged in first.");
+    return;
+  }
+    
 
   try {
-    const res = await fetch("/video/list", {
+    const res = await fetch("/video/videos", {
       method: "GET",
       headers: { "Authorization": `Bearer ${token}` }
     });
