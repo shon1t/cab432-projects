@@ -1,6 +1,5 @@
 const express = require("express");
 const { CognitoUserPool, CognitoUser, AuthenticationDetails } = require("amazon-cognito-identity-js");
-global.fetch = require("node-fetch"); // Required for Cognito SDK in Node.js
 
 const router = express.Router();
 
