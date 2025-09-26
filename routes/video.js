@@ -24,7 +24,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 
         console.log("JWT user:", req.user); // check if req.user exists
 
-        const owner = req.user.username; // get user from JWT middleware
+        const owner = req.user["cognito:username"] || req.user.username;
         // save metadata to DynamoDB
         let videoId;
         try {
