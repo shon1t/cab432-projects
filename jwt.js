@@ -1,4 +1,4 @@
-const { CognitoJwtVerifier } = require("amazon-cognito-jwt-verifier");
+const { CognitoJwtVerifier } = require("cognito-jwt-verifier");
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: process.env.COGNITO_USER_POOL_ID,
