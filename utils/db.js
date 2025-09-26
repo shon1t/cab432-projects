@@ -44,11 +44,7 @@ async function updateVideoMetadata(owner, videoId, { s3OutputKey, format, status
 async function getUserVideos(owner) {
     const command = new QueryCommand({
         TableName: TABLE,
-        IndexName: "owner-index", // must match your GSI
-        KeyConditionExpression: "#own = :o", // use alias instead of reserved word
-        ExpressionAttributeNames: {
-            "#own": "owner" // alias 'owner' to '#own'
-        },
+        KeyConditionExpression: "owner = :o", 
         ExpressionAttributeValues: {
             ":o": { S: owner }
         }
