@@ -149,7 +149,7 @@ async function loadVideos() {
     } 
 
     listDiv.innerHTML = "";
-    videos.forEach(video => {
+    videos.videos.forEach(video => {
       const item = document.createElement("div");
       item.innerHTML = `
         <p><b>${video.videoId}</b> (${video.videoFormat}, ${video.status})</p>
