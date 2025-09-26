@@ -1,4 +1,4 @@
-const { DynamoDBClient, PutItemCommand, UpdateItemCommand, GetItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, PutItemCommand, UpdateItemCommand, QueryCommand } = require("@aws-sdk/client-dynamodb");
 const { v4: uuidv4 } = require("uuid");
 
 const db = new DynamoDBClient({ region: "ap-southeast-2" });
