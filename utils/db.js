@@ -44,7 +44,10 @@ async function updateVideoMetadata(owner, videoId, { s3OutputKey, format, status
 async function getUserVideos(owner) {
     const command = new QueryCommand({
         TableName: TABLE,
-        KeyConditionExpression: "#own = :o", 
+        KeyConditionExpression: "#own = :o",
+        ExpressionAttributeNames: {
+            "#own": "owner"   // alias for the reserved keyword
+        },
         ExpressionAttributeValues: {
             ":o": { S: owner }
         }
