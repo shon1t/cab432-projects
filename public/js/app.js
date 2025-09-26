@@ -1,30 +1,64 @@
 let authToken = localStorage.getItem("authToken");
 
-// Handle login form
-const loginForm = document.getElementById("loginForm");
-if (loginForm) {
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+let cachedLogin = {}; // store values between steps
 
-    const res = await fetch("/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+// Handle initial login
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-    if (res.ok) {
-      const data = await res.json();
-      authToken = data.authToken;
-      localStorage.setItem("authToken", authToken);
-      document.getElementById("message").innerText = "Login successful!";
-      window.location.href = "/video";
-    } else {
-      document.getElementById("message").innerText = "Login failed.";
-    }
+  cachedLogin = { username, password }; // save for later
+
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
   });
-}
+
+  const data = await res.json();
+  console.log("Login response:", data);
+
+  if (data.error === "NEW_PASSWORD_REQUIRED") {
+    // Show new password form
+    document.getElementById("message").textContent = data.message;
+    cachedLogin.session = data.session; // store session
+    document.getElementById("newPasswordSection").style.display = "block";
+  } else if (data.authToken) {
+    document.getElementById("message").textContent = "Login successful!";
+    localStorage.setItem("authToken", data.authToken);
+  } else {
+    document.getElementById("message").textContent = "Login failed: " + JSON.stringify(data);
+  }
+});
+
+// Handle new password submission
+document.getElementById("newPasswordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const newPassword = document.getElementById("newPassword").value;
+
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: cachedLogin.username,
+      password: cachedLogin.password,
+      newPassword,
+      session: cachedLogin.session //pass session from first step
+    })
+  });
+
+  const data = await res.json();
+  console.log("New password response:", data);
+
+  if (data.authToken) {
+    document.getElementById("message").textContent = "Password updated & login successful!";
+    localStorage.setItem("authToken", data.authToken);
+    document.getElementById("newPasswordSection").style.display = "none";
+  } else {
+    document.getElementById("message").textContent = "Error: " + JSON.stringify(data);
+  }
+});
 
 //Handle register form
 registerForm.addEventListener("submit", async (e) => {
