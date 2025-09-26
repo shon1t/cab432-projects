@@ -1,4 +1,6 @@
 let authToken = localStorage.getItem("authToken");
+const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
+global.fetch = require("node-fetch"); // required for Node
 
 // Handle login form
 const loginForm = document.getElementById("loginForm");
