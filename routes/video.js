@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
 const JWT = require("../jwt.js");
+const { authenticateToken } = require("../path/to/your/authenticateToken");
 
 const path = require("path");
 const fs = require("fs");
@@ -12,7 +13,7 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 // Upload to s3 endpoint, requires authentication
-router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req, res) => {
+router.post("/upload", authenticateToken, upload.single("video"), async (req, res) => {
     //res.json( { message: "Video uploaded successfully", file: req.file });
     try {
         const fileStream = fs.createReadStream(req.file.path);
@@ -51,7 +52,7 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
 });
 
 // Transcode endpoint, requires authentication
-router.post("/transcode", JWT.authenticateToken, async (req, res) => {
+router.post("/transcode", authenticateToken, async (req, res) => {
     const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
     const outputFile = `transcoded-${Date.now()}.${format}`;
@@ -122,7 +123,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
 });
 
 // Get all videos for logged-in user
-router.get("/videos", JWT.authenticateToken, async (req, res) => {
+router.get("/videos", authenticateToken, async (req, res) => {
     try {
         const videos = await getUserVideos(req.user.username);
         console.log("Videos fetched:", videos); // debug
