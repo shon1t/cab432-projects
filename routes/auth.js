@@ -7,7 +7,7 @@ const cognito = new AWS.CognitoIdentityServiceProvider({
   region: "ap-southeast-2"
 });
 
-const CLIENT_ID = "1lfahjkrfk5roqd51oo6fmc2va";
+const CLIENT_ID = "e2lgatu20g780tsmitg1usn5";
 const CLIENT_SECRET = "p3190udi8jq16bd2jpgn2j74kqg807uga9hrh3qiun2bqo0c1gr"; 
 const USER_POOL_ID = "ap-southeast-2_LoqVf6hsi";
 
