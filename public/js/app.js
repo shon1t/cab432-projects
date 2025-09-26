@@ -141,7 +141,12 @@ async function loadVideos() {
     const videos = await res.json();
     const listDiv = document.getElementById("videoList");
 
-    if (!listDiv) return;
+    console.log("Videos for logged-in user:", data.videos); // print to console
+
+    if (!listDiv){
+      console.error("No videoList element found in the DOM");
+      return;
+    } 
 
     listDiv.innerHTML = "";
     videos.forEach(video => {
