@@ -58,7 +58,7 @@ async function getUserVideos(owner) {
     // Convert DynamoDB’s raw format to plain JS objects
     return result.Items.map(item => ({
         videoId: item.videoId.S,
-        s3Key: item.s3Key?.S,
+        s3InputKey: item.s3Key?.S,
         s3OutputKey: item.s3OutputKey?.S || null,
         videoFormat: item.videoFormat?.S || null,
         status: item.status.S,
