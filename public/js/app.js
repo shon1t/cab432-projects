@@ -118,16 +118,6 @@ if (adminButton) {
   });
 }
 
-// Hnadle video list button
-const videoListButton = document.getElementById("videoListButton");
-
-if (videoListButton) {
-  videoListButton.addEventListener("click", () => {
-    window.location.href = "/video"; // this will trigger loadVideos()
-  });
-}
-
-
 // Fetch and display user's videos
 async function loadVideos() {
   const token = localStorage.getItem("authToken");
@@ -170,6 +160,13 @@ async function loadVideos() {
 // Run this automatically when user is on the /video page
 if (window.location.pathname === "/video") {
   loadVideos();
+}
+
+// Hnadle video list button
+const videoListButton = document.getElementById("videoListButton");
+
+if (videoListButton) {
+  videoListButton.addEventListener("click", loadVideos);
 }
 
 // Handle logout button
