@@ -27,6 +27,9 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   } else if (data.authToken) {
     document.getElementById("message").textContent = "Login successful!";
     localStorage.setItem("authToken", data.authToken);
+
+    // Redirect to uploads page
+    window.location.href = "/video"; // <-- add this line
   } else {
     document.getElementById("message").textContent = "Login failed: " + JSON.stringify(data);
   }
@@ -44,7 +47,7 @@ document.getElementById("newPasswordForm").addEventListener("submit", async (e) 
       username: cachedLogin.username,
       password: cachedLogin.password,
       newPassword,
-      session: cachedLogin.session //pass session from first step
+      session: cachedLogin.session // pass session from first step
     })
   });
 
@@ -55,12 +58,15 @@ document.getElementById("newPasswordForm").addEventListener("submit", async (e) 
     document.getElementById("message").textContent = "Password updated & login successful!";
     localStorage.setItem("authToken", data.authToken);
     document.getElementById("newPasswordSection").style.display = "none";
+
+    // Redirect to uploads page
+    window.location.href = "/video"; // <-- add this line
   } else {
     document.getElementById("message").textContent = "Error: " + JSON.stringify(data);
   }
 });
 
-//Handle register form
+// Handle register form
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const username = document.getElementById("regUsername").value;
@@ -76,6 +82,7 @@ registerForm.addEventListener("submit", async (e) => {
   const data = await res.json();
   document.getElementById("registerMessage").innerText = data.message || data.error;
 });
+
 
 // Handle upload form
 const uploadForm = document.getElementById("uploadForm");
