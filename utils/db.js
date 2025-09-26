@@ -54,7 +54,7 @@ async function getUserVideos(owner) {
     });
 
     const result = await db.send(command);
-
+    console.log("DynamoDB scan result:", result.Items);  // debug
     // Convert DynamoDB’s raw format to plain JS objects
     return result.Items.map(item => ({
         videoId: item.videoId.S,

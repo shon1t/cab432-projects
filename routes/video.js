@@ -125,6 +125,7 @@ router.post("/transcode", JWT.authenticateToken, async (req, res) => {
 router.get("/videos", JWT.authenticateToken, async (req, res) => {
     try {
         const videos = await getUserVideos(req.user.username);
+        console.log("Videos fetched:", videos); // debug
         res.json({ videos });
     } catch (err) {
         console.error("Error fetching videos:", err);
