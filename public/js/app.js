@@ -152,7 +152,7 @@ async function loadVideos() {
     videos.forEach(video => {
       const item = document.createElement("div");
       item.innerHTML = `
-        <p><b>${video.videoId}</b> (${video.format}, ${video.status})</p>
+        <p><b>${video.videoId}</b> (${video.videoFormat}, ${video.status})</p>
         ${video.s3KeyOutput ? `<a href="${video.downloadUrl}" target="_blank">Download</a>` : ""}
       `;
       listDiv.appendChild(item);
