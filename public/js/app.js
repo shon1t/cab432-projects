@@ -118,6 +118,16 @@ if (adminButton) {
   });
 }
 
+// Hnadle video list button
+const videoListButton = document.getElementById("videoListButton");
+
+if (videoListButton) {
+  videoListButton.addEventListener("click", () => {
+    window.location.href = "/video"; // this will trigger loadVideos()
+  });
+}
+
+
 // Fetch and display user's videos
 async function loadVideos() {
   const token = localStorage.getItem("authToken");
