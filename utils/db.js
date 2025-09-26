@@ -45,7 +45,10 @@ async function getUserVideos(owner) {
     const command = new QueryCommand({
         TableName: TABLE,
         IndexName: "owner-index", // must match your GSI
-        KeyConditionExpression: "owner = :o",
+        KeyConditionExpression: "#own = :o", // use alias instead of reserved word
+        ExpressionAttributeNames: {
+            "#own": "owner" // alias 'owner' to '#own'
+        },
         ExpressionAttributeValues: {
             ":o": { S: owner }
         }
@@ -58,10 +61,11 @@ async function getUserVideos(owner) {
         videoId: item.videoId.S,
         s3InputKey: item.s3InputKey?.S,
         s3OutputKey: item.s3OutputKey?.S || null,
-        videoFormat: item.format?.S || null,
+        videoFormat: item.videoFormat?.S || null,
         status: item.status.S,
         createdAt: item.createdAt.S
     }));
 }
+
 
 module.exports = { saveVideoMetadata, updateVideoMetadata, getUserVideos };
