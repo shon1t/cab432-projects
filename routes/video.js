@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
 const JWT = require("../jwt.js");
-const { authenticateToken } = require("../path/to/your/authenticateToken");
+const { authenticateToken } = require("../jwt.js");
 
 const path = require("path");
 const fs = require("fs");
