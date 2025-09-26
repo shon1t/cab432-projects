@@ -1,30 +1,28 @@
-const jwt = require("jsonwebtoken");
-const jwksClient = require("jwks-rsa");
+const poolData = {
+  UserPoolId: "ap-southeast-2_LoqVf6hsi", 
+  ClientId: "1lfahjkrfk5roqd51oo6fmc2va", 
+};
+const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-const client = jwksClient({
-  jwksUri: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi/.well-known/jwks.json"
+document.getElementById("registerForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const username = document.getElementById("regUsername").value;
+  const password = document.getElementById("regPassword").value;
+  const email = document.getElementById("regEmail").value;
+
+  const attributeList = [
+    new AmazonCognitoIdentity.CognitoUserAttribute({
+      Name: "email",
+      Value: email
+    })
+  ];
+
+  userPool.signUp(username, password, attributeList, null, function(err, result) {
+    if (err) {
+      document.getElementById("registerMessage").innerText = err.message || JSON.stringify(err);
+      return;
+    }
+    document.getElementById("registerMessage").innerText = "Registration successful! Please check your email for a confirmation code.";
+    
+  });
 });
-
-function getKey(header, callback) {
-  client.getSigningKey(header.kid, function(err, key) {
-    const signingKey = key.getPublicKey();
-    callback(null, signingKey);
-  });
-}
-
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, getKey, {
-    algorithms: ["RS256"],
-    issuer: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi"
-  }, (err, decoded) => {
-    if (err) return res.sendStatus(401);
-    req.user = decoded;
-    next();
-  });
-}
-
-module.exports = { authenticateToken };
