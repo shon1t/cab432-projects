@@ -1,1 +1,281 @@
-Admin only content. Hello Admin!
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .admin-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+    .video-item { margin: 10px 0; padding: 10px; border: 1px solid #eee; }
+    .delete-btn { color: white; background-color: #dc3545; border: none; padding: 5px 10px; cursor: pointer; }
+    .delete-btn:hover { background-color: #c82333; }
+    .assign-btn { color: white; background-color: #007bff; border: none; padding: 5px 10px; cursor: pointer; }
+    .assign-btn:hover { background-color: #0056b3; }
+    button { margin: 5px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+  
+  <div id="userInfo"></div>
+  
+  <!-- User Group Management Section -->
+  <div class="admin-section">
+    <h2>User Group Management</h2>
+    
+    <div>
+      <h3>Assign User to Group</h3>
+      <input type="text" id="assignUsername" placeholder="Username" />
+      <select id="assignGroupName">
+        <option value="Admin">Admin</option>
+        <option value="User">User</option>
+      </select>
+      <button class="assign-btn" onclick="assignUserToGroup()">Assign to Group</button>
+    </div>
+    
+    <div>
+      <h3>Remove User from Group</h3>
+      <input type="text" id="removeUsername" placeholder="Username" />
+      <select id="removeGroupName">
+        <option value="Admin">Admin</option>
+        <option value="User">User</option>
+      </select>
+      <button class="delete-btn" onclick="removeUserFromGroup()">Remove from Group</button>
+    </div>
+    
+    <div>
+      <h3>Check User Groups</h3>
+      <input type="text" id="checkUsername" placeholder="Username" />
+      <button onclick="checkUserGroups()">Check Groups</button>
+      <div id="userGroupsResult"></div>
+    </div>
+  </div>
+
+  <!-- All Videos Management Section -->
+  <div class="admin-section">
+    <h2>All Videos Management</h2>
+    <button onclick="loadAllVideos()">Load All Videos</button>
+    <div id="allVideosList"></div>
+  </div>
+
+  <div id="message"></div>
+
+  <button onclick="goToUpload()">Back to Upload</button>
+  <button onclick="logout()">Logout</button>
+
+  <script src="js/app.js"></script>
+  <script>
+    const authToken = localStorage.getItem("authToken");
+    
+    if (!authToken) {
+      window.location.href = "/";
+    }
+
+    // Display current user info
+    async function loadUserInfo() {
+      try {
+        // Decode JWT to get user info (simple base64 decode for display)
+        const payload = JSON.parse(atob(authToken.split('.')[1]));
+        const userInfoDiv = document.getElementById("userInfo");
+        
+        userInfoDiv.innerHTML = `
+          <h3>Logged in as: ${payload['cognito:username']}</h3>
+          <p>Email: ${payload.email}</p>
+          <p>Groups: ${(payload['cognito:groups'] || []).join(', ')}</p>
+        `;
+        
+        // Check if user is actually an admin
+        if (!(payload['cognito:groups'] || []).includes('Admin')) {
+          document.body.innerHTML = `
+            <h1>Access Denied</h1>
+            <p>You need Admin privileges to access this page.</p>
+            <button onclick="window.location.href='/video'">Back to Upload</button>
+          `;
+        }
+      } catch (err) {
+        console.error("Error loading user info:", err);
+      }
+    }
+
+    // Group management functions
+    async function assignUserToGroup() {
+      const username = document.getElementById("assignUsername").value;
+      const groupName = document.getElementById("assignGroupName").value;
+      
+      if (!username) {
+        showMessage("Please enter a username");
+        return;
+      }
+
+      try {
+        const response = await fetch("/auth/assign-group", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ username, groupName })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          showMessage(`Success: ${data.message}`, "green");
+          document.getElementById("assignUsername").value = "";
+        } else {
+          showMessage(`Error: ${data.error}`, "red");
+        }
+      } catch (err) {
+        showMessage("Network error occurred", "red");
+      }
+    }
+
+    async function removeUserFromGroup() {
+      const username = document.getElementById("removeUsername").value;
+      const groupName = document.getElementById("removeGroupName").value;
+      
+      if (!username) {
+        showMessage("Please enter a username");
+        return;
+      }
+
+      try {
+        const response = await fetch("/auth/remove-group", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ username, groupName })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          showMessage(`Success: ${data.message}`, "green");
+          document.getElementById("removeUsername").value = "";
+        } else {
+          showMessage(`Error: ${data.error}`, "red");
+        }
+      } catch (err) {
+        showMessage("Network error occurred", "red");
+      }
+    }
+
+    async function checkUserGroups() {
+      const username = document.getElementById("checkUsername").value;
+      
+      if (!username) {
+        showMessage("Please enter a username");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/auth/user-groups/${username}`, {
+          headers: {
+            "Authorization": `Bearer ${authToken}`
+          }
+        });
+
+        const data = await response.json();
+        const resultDiv = document.getElementById("userGroupsResult");
+        
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <h4>Groups for ${data.username}:</h4>
+            ${data.groups.length > 0 ? 
+              data.groups.map(group => `<p>• ${group.name} (${group.description})</p>`).join('') :
+              '<p>No groups assigned</p>'
+            }
+          `;
+        } else {
+          resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+        }
+      } catch (err) {
+        document.getElementById("userGroupsResult").innerHTML = `<p style="color: red;">Network error occurred</p>`;
+      }
+    }
+
+    // Video management functions
+    async function loadAllVideos() {
+      try {
+        const response = await fetch("/video/admin/all-videos", {
+          headers: {
+            "Authorization": `Bearer ${authToken}`
+          }
+        });
+
+        const data = await response.json();
+        const videosList = document.getElementById("allVideosList");
+        
+        if (response.ok) {
+          if (data.videos.length === 0) {
+            videosList.innerHTML = "<p>No videos found</p>";
+          } else {
+            videosList.innerHTML = data.videos.map(video => `
+              <div class="video-item">
+                <strong>Video ID:</strong> ${video.videoId}<br>
+                <strong>Owner:</strong> ${video.owner}<br>
+                <strong>Status:</strong> ${video.status}<br>
+                <strong>Format:</strong> ${video.videoFormat || 'N/A'}<br>
+                <strong>Created:</strong> ${new Date(video.createdAt).toLocaleString()}<br>
+                <button class="delete-btn" onclick="deleteVideo('${video.videoId}')">Delete Video</button>
+              </div>
+            `).join('');
+          }
+        } else {
+          videosList.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+        }
+      } catch (err) {
+        document.getElementById("allVideosList").innerHTML = `<p style="color: red;">Network error occurred</p>`;
+      }
+    }
+
+    async function deleteVideo(videoId) {
+      if (!confirm(`Are you sure you want to delete video ${videoId}?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/video/admin/video/${videoId}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${authToken}`
+          }
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          showMessage(`Success: ${data.message}`, "green");
+          loadAllVideos(); // Refresh the list
+        } else {
+          showMessage(`Error: ${data.error}`, "red");
+        }
+      } catch (err) {
+        showMessage("Network error occurred", "red");
+      }
+    }
+
+    function showMessage(message, color = "black") {
+      const messageDiv = document.getElementById("message");
+      messageDiv.style.color = color;
+      messageDiv.textContent = message;
+      setTimeout(() => {
+        messageDiv.textContent = "";
+      }, 5000);
+    }
+
+    function goToUpload() {
+      window.location.href = "/video";
+    }
+
+    function logout() {
+      localStorage.removeItem("authToken");
+      window.location.href = "/";
+    }
+
+    // Load user info on page load
+    loadUserInfo();
+  </script>
+</body>
+</html>

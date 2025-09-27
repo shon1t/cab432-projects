@@ -54,11 +54,16 @@ const authenticateToken = async (req, res, next) => {
     
     console.log(`Cognito ID token verified for user: ${decoded["cognito:username"]} at URL ${req.url}`);
     
+    // Extract groups from Cognito token
+    const groups = decoded["cognito:groups"] || [];
+    
     // Add user info to the request for the next handler
     req.user = {
       username: decoded["cognito:username"],
       email: decoded.email,
       sub: decoded.sub,
+      groups: groups,
+      isAdmin: groups.includes('Admin'),
       ...decoded
     };
     next();
@@ -70,9 +75,14 @@ const authenticateToken = async (req, res, next) => {
       
       console.log(`Cognito access token verified for user: ${decoded.username} at URL ${req.url}`);
       
+      // Extract groups from access token (though ID tokens are preferred for group info)
+      const groups = decoded["cognito:groups"] || [];
+      
       req.user = {
         username: decoded.username,
         sub: decoded.sub,
+        groups: groups,
+        isAdmin: groups.includes('Admin'),
         ...decoded
       };
       next();

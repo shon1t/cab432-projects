@@ -1,7 +1,8 @@
 const express = require("express");
-const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand, ConfirmSignUpCommand, RespondToAuthChallengeCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand, ConfirmSignUpCommand, RespondToAuthChallengeCommand, AdminAddUserToGroupCommand, AdminRemoveUserFromGroupCommand, AdminListGroupsForUserCommand } = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const { getCognitoSecrets } = require("../utils/secrets");
+const JWT = require("../jwt");
 const router = express.Router();
 
 // Configure AWS Cognito
@@ -201,6 +202,106 @@ router.post("/change-password", async (req, res) => {
   } catch (err) {
     console.error("Change password error:", err);
     res.status(400).json({ error: err.message || "Failed to change password" });
+  }
+});
+
+// Middleware to check if user is admin
+const requireAdmin = (req, res, next) => {
+  if (!req.user || !req.user.groups || !req.user.groups.includes('Admin')) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
+
+// Add user to group (Admin only)
+router.post("/assign-group", JWT.authenticateToken, requireAdmin, async (req, res) => {
+  const { username, groupName } = req.body;
+
+  if (!username || !groupName) {
+    return res.status(400).json({ error: "Username and groupName are required" });
+  }
+
+  try {
+    const config = await getCognitoConfig();
+
+    const command = new AdminAddUserToGroupCommand({
+      UserPoolId: config.USER_POOL_ID,
+      Username: username,
+      GroupName: groupName
+    });
+
+    await cognito.send(command);
+    console.log(`User ${username} added to group ${groupName} by admin ${req.user.username}`);
+    
+    res.json({ 
+      message: `User ${username} successfully added to ${groupName} group`
+    });
+  } catch (err) {
+    console.error("Add to group error:", err);
+    res.status(400).json({ error: err.message || "Failed to add user to group" });
+  }
+});
+
+// Remove user from group (Admin only)
+router.post("/remove-group", JWT.authenticateToken, requireAdmin, async (req, res) => {
+  const { username, groupName } = req.body;
+
+  if (!username || !groupName) {
+    return res.status(400).json({ error: "Username and groupName are required" });
+  }
+
+  try {
+    const config = await getCognitoConfig();
+
+    const command = new AdminRemoveUserFromGroupCommand({
+      UserPoolId: config.USER_POOL_ID,
+      Username: username,
+      GroupName: groupName
+    });
+
+    await cognito.send(command);
+    console.log(`User ${username} removed from group ${groupName} by admin ${req.user.username}`);
+    
+    res.json({ 
+      message: `User ${username} successfully removed from ${groupName} group`
+    });
+  } catch (err) {
+    console.error("Remove from group error:", err);
+    res.status(400).json({ error: err.message || "Failed to remove user from group" });
+  }
+});
+
+// Get user's groups
+router.get("/user-groups/:username", JWT.authenticateToken, async (req, res) => {
+  const { username } = req.params;
+
+  // Users can only check their own groups, admins can check anyone's
+  if (req.user.username !== username && (!req.user.groups || !req.user.groups.includes('Admin'))) {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
+  try {
+    const config = await getCognitoConfig();
+
+    const command = new AdminListGroupsForUserCommand({
+      UserPoolId: config.USER_POOL_ID,
+      Username: username
+    });
+
+    const response = await cognito.send(command);
+    const groups = response.Groups?.map(group => ({
+      name: group.GroupName,
+      description: group.Description,
+      precedence: group.Precedence
+    })) || [];
+
+    res.json({ 
+      username: username,
+      groups: groups
+    });
+  } catch (err) {
+    console.error("Get user groups error:", err);
+    res.status(400).json({ error: err.message || "Failed to get user groups" });
   }
 });
 
