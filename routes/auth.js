@@ -24,18 +24,18 @@ function getSecretHash(username) {
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  const params = {
+  const command = new InitiateAuthCommand({
     AuthFlow: "USER_PASSWORD_AUTH",
     ClientId: CLIENT_ID,
     AuthParameters: {
       USERNAME: username,
       PASSWORD: password,
-      // SECRET_HASH: getSecretHash(username) // Uncomment if your app client has a secret
+      SECRET_HASH: getSecretHash(username) // Include if your app client has a secret
     }
-  };
+  });
 
   try {
-    const response = await cognito.initiateAuth(params).promise();
+    const response = await cognito.send(command);
     const idToken = response.AuthenticationResult.IdToken;
     
     console.log("Successful login by user", username);
@@ -50,7 +50,7 @@ router.post("/login", async (req, res) => {
 router.post("/register", async (req, res) => {
   const { username, password, email } = req.body;
 
-  const params = {
+  const command = new SignUpCommand({
     ClientId: CLIENT_ID,
     Username: username,
     Password: password,
@@ -60,11 +60,11 @@ router.post("/register", async (req, res) => {
         Value: email
       }
     ],
-    // SecretHash: getSecretHash(username) // Uncomment if your app client has a secret
-  };
+    SecretHash: getSecretHash(username) // Include if your app client has a secret
+  });
 
   try {
-    const response = await cognito.signUp(params).promise();
+    const response = await cognito.send(command);
     console.log("User registered:", username);
     res.json({ 
       message: "Registration successful! Please check your email for verification.",
