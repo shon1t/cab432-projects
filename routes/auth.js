@@ -1,36 +1,79 @@
 const express = require("express");
-const JWT = require("../jwt.js");
+const AWS = require("aws-sdk");
+const crypto = require("crypto");
 const router = express.Router();
 
-const users = {
-    CAB432: {
-      password: "supersecret",
-      admin: false,
-   },
-   admin: {
-      password: "admin",
-      admin: true,
-   },
-   sean: {
-      password: "12345",
-      admin: false,
-   }
+// Configure AWS Cognito
+const cognito = new AWS.CognitoIdentityServiceProvider({
+  region: "YOUR_REGION" // e.g., "ap-southeast-2"
+});
+
+const CLIENT_ID = "e2lgatu20g780tsmitg1usn5";
+const CLIENT_SECRET = "p3190udi8jq16bd2jpgn2j74kqg807uga9hrh3qiun2bqo0c1gr"; // If your app client has a secret
+const USER_POOL_ID = "ap-southeast-2_LoqVf6hsi";
+
+// Helper to compute SECRET_HASH (only if your app client has a secret)
+function getSecretHash(username) {
+  return crypto
+    .createHmac("SHA256", CLIENT_SECRET)
+    .update(username + CLIENT_ID)
+    .digest("base64");
 }
 
-// User needs to login to obtain an authentication token
-router.post("/login", (req, res) => { // /auth/login
-   // Check the username and password
-   const { username, password } = req.body;
-   const user = users[username];
+// User login with Cognito
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
 
-   if (!user || password !== user.password) {
-      return res.sendStatus(401);
-   }
+  const params = {
+    AuthFlow: "USER_PASSWORD_AUTH",
+    ClientId: CLIENT_ID,
+    AuthParameters: {
+      USERNAME: username,
+      PASSWORD: password,
+      // SECRET_HASH: getSecretHash(username) // Uncomment if your app client has a secret
+    }
+  };
 
-   // Get a new authentication token and send it back to the client
-   console.log("Successful login by user", username);
-   const token = JWT.generateAccessToken({ username });
-   res.json({ authToken: token });
+  try {
+    const response = await cognito.initiateAuth(params).promise();
+    const idToken = response.AuthenticationResult.IdToken;
+    
+    console.log("Successful login by user", username);
+    res.json({ authToken: idToken });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(401).json({ error: err.message || "Authentication failed" });
+  }
+});
+
+// User registration with Cognito
+router.post("/register", async (req, res) => {
+  const { username, password, email } = req.body;
+
+  const params = {
+    ClientId: CLIENT_ID,
+    Username: username,
+    Password: password,
+    UserAttributes: [
+      {
+        Name: "email",
+        Value: email
+      }
+    ],
+    // SecretHash: getSecretHash(username) // Uncomment if your app client has a secret
+  };
+
+  try {
+    const response = await cognito.signUp(params).promise();
+    console.log("User registered:", username);
+    res.json({ 
+      message: "Registration successful! Please check your email for verification.",
+      userSub: response.UserSub
+    });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(400).json({ error: err.message || "Registration failed" });
+  }
 });
 
 module.exports = router;
