@@ -321,6 +321,27 @@ if (videoListButton) {
   });
 }
 
+// Debug function to check JWT token contents
+function debugToken() {
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log("JWT Token Payload:", payload);
+      console.log("User Groups:", payload['cognito:groups']);
+      console.log("Is Admin:", (payload['cognito:groups'] || []).includes('Admin'));
+      
+      // Show alert with user info
+      alert(`User: ${payload['cognito:username']}\nGroups: ${(payload['cognito:groups'] || []).join(', ') || 'None'}\nIs Admin: ${(payload['cognito:groups'] || []).includes('Admin')}`);
+    } catch (err) {
+      console.error("Error decoding token:", err);
+      alert("Error decoding token");
+    }
+  } else {
+    alert("No auth token found");
+  }
+}
+
 // Handle logout button
 const logoutButton = document.getElementById("logoutButton");
 
