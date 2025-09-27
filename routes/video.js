@@ -135,3 +135,23 @@ router.get("/videos", authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
+
+
+// New endpoint: Get pre-signed download URL for a video
+// Production: Return real S3 pre-signed download URL for user's video
+router.get("/presigned-download/:videoId", authenticateToken, async (req, res) => {
+    try {
+        // Find video metadata for this user and videoId
+        const videos = await getUserVideos(req.user.username);
+        const video = videos.find(v => v.videoId === req.params.videoId);
+        if (!video || !video.s3OutputKey) {
+            return res.status(404).json({ error: "Video not found or not transcoded yet." });
+        }
+        // Generate pre-signed S3 URL
+        const url = await getDownloadUrl(video.s3OutputKey);
+        res.json({ downloadUrl: url });
+    } catch (err) {
+        console.error("Error generating pre-signed URL:", err);
+        res.status(500).json({ error: "Could not generate pre-signed URL" });
+    }
+});

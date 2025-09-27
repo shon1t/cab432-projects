@@ -217,7 +217,10 @@ async function loadVideos() {
           <b>Format:</b> ${video.videoFormat || "N/A"}<br>
           <b>Created At:</b> ${video.createdAt}
         </p>
-        ${video.s3OutputKey ? `<a href="${video.s3OutputKey}" target="_blank">Download</a>` : ""}
+        ${video.s3OutputKey ? `<a href="${video.s3OutputKey}" target="_blank">Direct S3 Key Download</a>` : ""}
+        <br>
+        <button class="get-download-link" data-videoid="${video.videoId}">Get Pre-signed Download Link</button>
+        <span class="download-url" id="download-url-${video.videoId}"></span>
         <hr>
       `;
       listDiv.appendChild(item);
@@ -231,6 +234,25 @@ async function loadVideos() {
 if (window.location.pathname === "/video") {
   loadVideos();
 }
+
+// Add event listener for download link buttons
+document.addEventListener("click", async function(e) {
+  if (e.target && e.target.classList.contains("get-download-link")) {
+    const videoId = e.target.getAttribute("data-videoid");
+    const token = localStorage.getItem("authToken");
+    const res = await fetch(`/video/presigned-download/${videoId}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById(`download-url-${videoId}`).innerHTML =
+        `<a href="${data.downloadUrl}" target="_blank">Download Video</a>`;
+    } else {
+      document.getElementById(`download-url-${videoId}`).innerText = "Failed to get link.";
+    }
+  }
+});
 
 // Hnadle video list button
 const videoListButton = document.getElementById("videoListButton");
