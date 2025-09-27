@@ -62,7 +62,6 @@
   <button onclick="goToUpload()">Back to Upload</button>
   <button onclick="logout()">Logout</button>
 
-  <script src="js/app.js"></script>
   <script>
     const authToken = localStorage.getItem("authToken");
     
@@ -116,14 +115,18 @@
 
     // Group management functions
     async function assignUserToGroup() {
+      console.log("assignUserToGroup called");
       const username = document.getElementById("assignUsername").value;
       const groupName = document.getElementById("assignGroupName").value;
+      console.log("Username:", username, "Group:", groupName);
       
       if (!username) {
+        console.log("No username provided");
         showMessage("Please enter a username");
         return;
       }
 
+      console.log("Making request to assign group");
       try {
         const response = await fetch("/auth/assign-group", {
           method: "POST",
