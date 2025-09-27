@@ -16,12 +16,61 @@ if (loginForm) {
 
     if (res.ok) {
       const data = await res.json();
-      authToken = data.authToken;
-      localStorage.setItem("authToken", authToken);
-      document.getElementById("message").innerText = "Login successful!";
-      window.location.href = "/video";
+      
+      // Check if we got a password challenge
+      if (data.challenge === "NEW_PASSWORD_REQUIRED") {
+        // Show password change form
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("passwordChangeForm").style.display = "block";
+        document.getElementById("changeUsername").value = username;
+        document.getElementById("message").innerText = data.message;
+        
+        // Store session data for password change
+        window.passwordChangeSession = data.session;
+        window.passwordChangeUsername = data.username;
+      } else {
+        // Normal login success
+        authToken = data.authToken;
+        localStorage.setItem("authToken", authToken);
+        document.getElementById("message").innerText = "Login successful!";
+        window.location.href = "/video";
+      }
     } else {
       document.getElementById("message").innerText = "Login failed.";
+    }
+  });
+}
+
+// Handle password change form
+const changePasswordForm = document.getElementById("changePasswordForm");
+if (changePasswordForm) {
+  document.getElementById("changePasswordForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = window.passwordChangeUsername;
+    const newPassword = document.getElementById("newPassword").value;
+    const session = window.passwordChangeSession;
+
+    const res = await fetch("/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, newPassword, session }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.authToken;
+      localStorage.setItem("authToken", authToken);
+      document.getElementById("changePasswordMessage").innerText = data.message;
+      document.getElementById("changePasswordMessage").style.color = "green";
+      
+      // Redirect after successful password change
+      setTimeout(() => {
+        window.location.href = "/video";
+      }, 2000);
+    } else {
+      const error = await res.json();
+      document.getElementById("changePasswordMessage").innerText = `Password change failed: ${error.error}`;
+      document.getElementById("changePasswordMessage").style.color = "red";
     }
   });
 }

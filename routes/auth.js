@@ -1,5 +1,5 @@
 const express = require("express");
-const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand, ConfirmSignUpCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand, ConfirmSignUpCommand, RespondToAuthChallengeCommand } = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const router = express.Router();
 
@@ -35,6 +35,25 @@ router.post("/login", async (req, res) => {
 
   try {
     const response = await cognito.send(command);
+    
+    // Check if we got a challenge (temporary password case)
+    if (response.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
+      res.json({ 
+        challenge: "NEW_PASSWORD_REQUIRED",
+        session: response.Session,
+        message: "Please set a new password",
+        username: username
+      });
+      return;
+    }
+    
+    // Check if AuthenticationResult exists
+    if (!response.AuthenticationResult || !response.AuthenticationResult.IdToken) {
+      console.error("No AuthenticationResult in response:", response);
+      res.status(401).json({ error: "Authentication failed - no tokens returned" });
+      return;
+    }
+    
     const idToken = response.AuthenticationResult.IdToken;
     
     console.log("Successful login by user", username);
@@ -123,6 +142,36 @@ router.post("/confirm", async (req, res) => {
     } else {
       res.status(400).json({ error: err.message || "Confirmation failed" });
     }
+  }
+});
+
+// Route to handle password change challenge
+router.post("/change-password", async (req, res) => {
+  const { username, newPassword, session } = req.body;
+
+  const command = new RespondToAuthChallengeCommand({
+    ClientId: CLIENT_ID,
+    ChallengeName: 'NEW_PASSWORD_REQUIRED',
+    Session: session,
+    ChallengeResponses: {
+      USERNAME: username,
+      NEW_PASSWORD: newPassword,
+      SECRET_HASH: secretHash(CLIENT_ID, CLIENT_SECRET, username)
+    }
+  });
+
+  try {
+    const response = await cognito.send(command);
+    const idToken = response.AuthenticationResult.IdToken;
+    
+    console.log("Password changed and login successful for user", username);
+    res.json({ 
+      authToken: idToken,
+      message: "Password changed successfully! You are now logged in."
+    });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(400).json({ error: err.message || "Failed to change password" });
   }
 });
 

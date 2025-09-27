@@ -14,6 +14,17 @@
 
   <p id="message"></p>
 
+  <!-- Password Change Form (hidden by default) -->
+  <div id="passwordChangeForm" style="display: none;">
+    <h2>Set New Password</h2>
+    <form id="changePasswordForm">
+      <input type="text" id="changeUsername" readonly />
+      <input type="password" id="newPassword" placeholder="New Password" required />
+      <button type="submit">Set Password & Login</button>
+    </form>
+    <p id="changePasswordMessage"></p>
+  </div>
+
   <hr>
 
   <h2>Register</h2>
