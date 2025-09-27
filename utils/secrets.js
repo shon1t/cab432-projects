@@ -1,6 +1,7 @@
 const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
 
-// Configure the Secrets Manager client
+// Initialize Secrets Manager client with default region
+// We avoid circular dependency with parameters.js by using a default region
 const client = new SecretsManagerClient({ region: "ap-southeast-2" });
 
 // In-memory cache for secrets to avoid repeated API calls
