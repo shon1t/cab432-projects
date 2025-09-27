@@ -1,11 +1,11 @@
 const express = require("express");
-const AWS = require("aws-sdk");
+const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand } = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const router = express.Router();
 
 // Configure AWS Cognito
-const cognito = new AWS.CognitoIdentityServiceProvider({
-  region: "YOUR_REGION" // e.g., "ap-southeast-2"
+const cognito = new CognitoIdentityProviderClient({
+  region: "ap-southeast-2"
 });
 
 const CLIENT_ID = "e2lgatu20g780tsmitg1usn5";
