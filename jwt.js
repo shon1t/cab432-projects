@@ -1,25 +1,23 @@
-const jwt = require("jsonwebtoken");
-const jwksClient = require("jwks-rsa");
+const { CognitoJwtVerifier } = require("aws-jwt-verify");
 
-// Configure JWKS client for Cognito
-const client = jwksClient({
-  jwksUri: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi/.well-known/jwks.json"
+// Configure JWT verifiers for Cognito (matching snippet approach)
+const userPoolId = "ap-southeast-2_LoqVf6hsi";
+const clientId = "e2lgatu20g780tsmitg1usn5";
+
+const idVerifier = CognitoJwtVerifier.create({
+  userPoolId: userPoolId,
+  tokenUse: "id",
+  clientId: clientId,
 });
 
-// Function to get signing key for JWT verification
-function getKey(header, callback) {
-  client.getSigningKey(header.kid, function(err, key) {
-    if (err) {
-      callback(err);
-      return;
-    }
-    const signingKey = key.getPublicKey();
-    callback(null, signingKey);
-  });
-}
+const accessVerifier = CognitoJwtVerifier.create({
+  userPoolId: userPoolId,
+  tokenUse: "access", 
+  clientId: clientId,
+});
 
-// Middleware to verify Cognito JWT token
-const authenticateToken = (req, res, next) => {
+// Middleware to verify Cognito JWT token (using aws-jwt-verify like the snippet)
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -28,18 +26,11 @@ const authenticateToken = (req, res, next) => {
     return res.sendStatus(401);
   }
 
-  // Verify the Cognito JWT token
-  jwt.verify(token, getKey, {
-    algorithms: ["RS256"],
-    issuer: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi",
-    audience: "e2lgatu20g780tsmitg1usn5"
-  }, (err, decoded) => {
-    if (err) {
-      console.log(`JWT verification failed at URL ${req.url}:`, err.message);
-      return res.sendStatus(401);
-    }
-
-    console.log(`Cognito token verified for user: ${decoded["cognito:username"]} at URL ${req.url}`);
+  try {
+    // Try to verify as ID token first (most common for authentication)
+    const decoded = await idVerifier.verify(token);
+    
+    console.log(`Cognito ID token verified for user: ${decoded["cognito:username"]} at URL ${req.url}`);
     
     // Add user info to the request for the next handler
     req.user = {
@@ -49,7 +40,24 @@ const authenticateToken = (req, res, next) => {
       ...decoded
     };
     next();
-  });
+  } catch (err) {
+    try {
+      // If ID token fails, try access token
+      const decoded = await accessVerifier.verify(token);
+      
+      console.log(`Cognito access token verified for user: ${decoded.username} at URL ${req.url}`);
+      
+      req.user = {
+        username: decoded.username,
+        sub: decoded.sub,
+        ...decoded
+      };
+      next();
+    } catch (accessErr) {
+      console.log(`JWT verification failed at URL ${req.url}:`, err.message);
+      return res.sendStatus(401);
+    }
+  };
 };
 
 module.exports = { authenticateToken };
