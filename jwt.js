@@ -1,20 +1,39 @@
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
+const { getCognitoSecrets } = require("./utils/secrets");
 
-// Configure JWT verifiers for Cognito
-const userPoolId = "ap-southeast-2_LoqVf6hsi";
-const clientId = "e2lgatu20g780tsmitg1usn5";
+// Secret name in AWS Secrets Manager (should match the one in auth.js)
+const COGNITO_SECRET_NAME = "a2-group111-secret";
 
-const idVerifier = CognitoJwtVerifier.create({
-  userPoolId: userPoolId,
-  tokenUse: "id",
-  clientId: clientId,
-});
+// Cache for verifiers
+let verifiers = null;
 
-const accessVerifier = CognitoJwtVerifier.create({
-  userPoolId: userPoolId,
-  tokenUse: "access", 
-  clientId: clientId,
-});
+// Initialize JWT verifiers from Secrets Manager
+async function getVerifiers() {
+  if (!verifiers) {
+    try {
+      const config = await getCognitoSecrets(COGNITO_SECRET_NAME);
+      
+      verifiers = {
+        idVerifier: CognitoJwtVerifier.create({
+          userPoolId: config.USER_POOL_ID,
+          tokenUse: "id",
+          clientId: config.CLIENT_ID,
+        }),
+        accessVerifier: CognitoJwtVerifier.create({
+          userPoolId: config.USER_POOL_ID,
+          tokenUse: "access", 
+          clientId: config.CLIENT_ID,
+        })
+      };
+      
+      console.log("JWT verifiers initialized from Secrets Manager");
+    } catch (error) {
+      console.error("Failed to initialize JWT verifiers:", error.message);
+      throw error;
+    }
+  }
+  return verifiers;
+}
 
 // Middleware to verify Cognito JWT token
 const authenticateToken = async (req, res, next) => {
@@ -27,6 +46,9 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
+    // Get verifiers from Secrets Manager
+    const { idVerifier, accessVerifier } = await getVerifiers();
+    
     // Try to verify as ID token first 
     const decoded = await idVerifier.verify(token);
     
@@ -43,6 +65,7 @@ const authenticateToken = async (req, res, next) => {
   } catch (err) {
     try {
       // If ID token fails, try access token
+      const { accessVerifier } = await getVerifiers();
       const decoded = await accessVerifier.verify(token);
       
       console.log(`Cognito access token verified for user: ${decoded.username} at URL ${req.url}`);
