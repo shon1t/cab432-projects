@@ -94,14 +94,20 @@
         // Check if user is actually an admin (check both possible group formats)
         const isAdmin = groups.includes('Admin');
         console.log("Is admin check:", isAdmin);
+        console.log("Groups array:", groups);
+        console.log("Looking for 'Admin' in:", groups);
+        console.log("groups.includes('Admin'):", groups.includes('Admin'));
         
         if (!isAdmin) {
+          console.log("Access denied - not admin");
           document.body.innerHTML = `
             <h1>Access Denied</h1>
             <p>You need Admin privileges to access this page.</p>
             <p>Your groups: ${groups.join(', ') || 'None'}</p>
             <button onclick="window.location.href='/video'">Back to Upload</button>
           `;
+        } else {
+          console.log("Access granted - user is admin");
         }
       } catch (err) {
         console.error("Error loading user info:", err);
