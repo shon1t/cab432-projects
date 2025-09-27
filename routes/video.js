@@ -6,7 +6,7 @@ const JWT = require("../jwt.js");
 const path = require("path");
 const fs = require("fs");
 const { uploadToS3, getDownloadUrl, downloadFromS3, getBucketName } = require("../utils/s3.js");
-const { saveVideoMetadata, updateVideoMetadata, getUserVideos } = require("../utils/db.js");
+const { saveVideoMetadata, updateVideoMetadata, getUserVideos, getDbClient } = require("../utils/db.js");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -160,7 +160,7 @@ router.get("/admin/all-videos", JWT.authenticateToken, async (req, res) => {
 
     try {
         // For now, we'll scan the entire table (in production, you'd want pagination)
-        const { client, config } = await require("../utils/db").getDbClient();
+        const { client, config } = await getDbClient();
         const { ScanCommand } = require("@aws-sdk/client-dynamodb");
         
         const command = new ScanCommand({
@@ -198,7 +198,7 @@ router.delete("/admin/video/:videoId", JWT.authenticateToken, async (req, res) =
         const { videoId } = req.params;
         
         // Get video details first to find the owner and S3 keys
-        const { client, config } = await require("../utils/db").getDbClient();
+        const { client, config } = await getDbClient();
         const { QueryCommand, DeleteItemCommand } = require("@aws-sdk/client-dynamodb");
         
         // Find the video by scanning (in production, you'd want a GSI)
@@ -259,7 +259,7 @@ router.delete("/video/:videoId", JWT.authenticateToken, async (req, res) => {
             return res.status(404).json({ error: "Video not found or access denied" });
         }
         
-        const { client, config } = await require("../utils/db").getDbClient();
+        const { client, config } = await getDbClient();
         const { DeleteItemCommand } = require("@aws-sdk/client-dynamodb");
         
         const deleteCommand = new DeleteItemCommand({

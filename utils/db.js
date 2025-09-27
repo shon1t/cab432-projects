@@ -92,4 +92,4 @@ async function getUserVideos(owner) {
 }
 
 
-module.exports = { saveVideoMetadata, updateVideoMetadata, getUserVideos };
+module.exports = { saveVideoMetadata, updateVideoMetadata, getUserVideos, getDbClient };
