@@ -51,6 +51,32 @@ if (registerForm) {
   });
 }
 
+// Handle confirmation form
+const confirmForm = document.getElementById("confirmForm");
+if (confirmForm) {
+  confirmForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("confirmUsername").value;
+    const confirmationCode = document.getElementById("confirmationCode").value;
+
+    const res = await fetch("/auth/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, confirmationCode }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById("confirmMessage").innerText = data.message;
+      document.getElementById("confirmMessage").style.color = "green";
+    } else {
+      const error = await res.json();
+      document.getElementById("confirmMessage").innerText = `Confirmation failed: ${error.error}`;
+      document.getElementById("confirmMessage").style.color = "red";
+    }
+  });
+}
+
 // Handle upload form
 const uploadForm = document.getElementById("uploadForm");
 const downloadLink = document.getElementById("downloadLink");
@@ -134,7 +160,7 @@ if (adminButton) {
       } else if (buttonRes.status === 403) {
         alert("Forbidden — only admins can access this page.");
       } else if (buttonRes.status === 401){
-        alert("Your session has expired ot your token is invalid.")
+        alert("Your session has expired or your token is invalid.")
       }
     } catch (error) {
       console.error("Error accessing admin page:", error);

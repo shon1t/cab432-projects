@@ -1,5 +1,5 @@
 const express = require("express");
-const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const { CognitoIdentityProviderClient, InitiateAuthCommand, SignUpCommand, ConfirmSignUpCommand } = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const router = express.Router();
 
@@ -9,15 +9,14 @@ const cognito = new CognitoIdentityProviderClient({
 });
 
 const CLIENT_ID = "e2lgatu20g780tsmitg1usn5";
-const CLIENT_SECRET = "p3190udi8jq16bd2jpgn2j74kqg807uga9hrh3qiun2bqo0c1gr"; // If your app client has a secret
+const CLIENT_SECRET = "p3190udi8jq16bd2jpgn2j74kqg807uga9hrh3qiun2bqo0c1gr";
 const USER_POOL_ID = "ap-southeast-2_LoqVf6hsi";
 
-// Helper to compute SECRET_HASH (only if your app client has a secret)
-function getSecretHash(username) {
-  return crypto
-    .createHmac("SHA256", CLIENT_SECRET)
-    .update(username + CLIENT_ID)
-    .digest("base64");
+// Helper to compute SECRET_HASH 
+function secretHash(clientId, clientSecret, username) {
+  const hasher = crypto.createHmac('sha256', clientSecret);
+  hasher.update(`${username}${clientId}`);
+  return hasher.digest('base64');
 }
 
 // User login with Cognito
@@ -30,7 +29,7 @@ router.post("/login", async (req, res) => {
     AuthParameters: {
       USERNAME: username,
       PASSWORD: password,
-      SECRET_HASH: getSecretHash(username) // Include if your app client has a secret
+      SECRET_HASH: secretHash(CLIENT_ID, CLIENT_SECRET, username) 
     }
   });
 
@@ -60,7 +59,7 @@ router.post("/register", async (req, res) => {
         Value: email
       }
     ],
-    SecretHash: getSecretHash(username) // Include if your app client has a secret
+    SecretHash: secretHash(CLIENT_ID, CLIENT_SECRET, username) 
   });
 
   try {
@@ -72,7 +71,58 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error("Registration error:", err);
-    res.status(400).json({ error: err.message || "Registration failed" });
+    
+    // Handle specific AWS Cognito errors
+    if (err.name === 'LimitExceededException') {
+      res.status(429).json({ 
+        error: "Daily email limit exceeded. Please try again tomorrow or contact support." 
+      });
+    } else if (err.name === 'UsernameExistsException') {
+      res.status(400).json({ 
+        error: "Username already exists. Please choose a different username." 
+      });
+    } else {
+      res.status(400).json({ error: err.message || "Registration failed" });
+    }
+  }
+});
+
+// Email confirmation route
+router.post("/confirm", async (req, res) => {
+  const { username, confirmationCode } = req.body;
+
+  const command = new ConfirmSignUpCommand({
+    ClientId: CLIENT_ID,
+    SecretHash: secretHash(CLIENT_ID, CLIENT_SECRET, username),
+    Username: username,
+    ConfirmationCode: confirmationCode,
+  });
+
+  try {
+    const response = await cognito.send(command);
+    console.log("User confirmed:", username);
+    res.json({ 
+      message: "Email confirmed successfully! You can now log in.",
+    });
+  } catch (err) {
+    console.error("Confirmation error:", err);
+    
+    // Handle specific AWS Cognito errors
+    if (err.name === 'CodeMismatchException') {
+      res.status(400).json({ 
+        error: "Invalid confirmation code. Please check the code and try again." 
+      });
+    } else if (err.name === 'ExpiredCodeException') {
+      res.status(400).json({ 
+        error: "Confirmation code has expired. Please request a new code." 
+      });
+    } else if (err.name === 'UserNotFoundException') {
+      res.status(400).json({ 
+        error: "User not found." 
+      });
+    } else {
+      res.status(400).json({ error: err.message || "Confirmation failed" });
+    }
   }
 });
 
