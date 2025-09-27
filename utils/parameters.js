@@ -123,20 +123,20 @@ async function getParameters(parameterNames, withDecryption = false) {
  */
 async function getAppConfig() {
   const parameterNames = [
-    '/a2-group-111/app/region',
-    '/a2-group-111/app/port', 
-    '/a2-group-111/app/dynamodb-table',
-    '/a2-group-111/app/s3-bucket'
+    '/a2-group111/app/region',
+    '/a2-group111/app/port', 
+    '/a2-group111/app/dynamodb-table',
+    '/a2-group111/app/s3-bucket'
   ];
   
   try {
     const parameters = await getParameters(parameterNames);
     
     return {
-      AWS_REGION: parameters['/a2-group-111/app/region'],
-      PORT: parseInt(parameters['/a2-group-111/app/port']) || 3000,
-      DYNAMODB_TABLE: parameters['/a2-group-111/app/dynamodb-table'],
-      S3_BUCKET: parameters['/a2-group-111/app/s3-bucket']
+      AWS_REGION: parameters['/a2-group111/app/region'],
+      PORT: parseInt(parameters['/a2-group111/app/port']) || 3000,
+      DYNAMODB_TABLE: parameters['/a2-group111/app/dynamodb-table'],
+      S3_BUCKET: parameters['/a2-group111/app/s3-bucket']
     };
     
   } catch (error) {
