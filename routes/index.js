@@ -13,9 +13,14 @@ router.get("/video", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/upload.html"));
 });
 
-// Admin page only accessible for users with admin role
+// Admin page only accessible for users with Admin group
 router.get("/admin", JWT.authenticateToken, (req, res) => {
-    if (req.user.username !== "admin") return res.sendStatus(403);
+    // Check if user is in Admin group
+    if (!req.user.isAdmin) {
+        console.log(`Access denied for user ${req.user.username}. Groups: ${req.user.groups || 'none'}`);
+        return res.sendStatus(403);
+    }
+    console.log(`Admin access granted for user ${req.user.username}`);
     res.sendFile(path.join(__dirname, "../public/admin.html"));
 });
 
