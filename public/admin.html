@@ -63,9 +63,10 @@
   <button onclick="logout()">Logout</button>
 
   <script>
-    const authToken = localStorage.getItem("authToken");
+    // Use a different variable name to avoid conflicts
+    const adminAuthToken = localStorage.getItem("authToken");
     
-    if (!authToken) {
+    if (!adminAuthToken) {
       console.log("No auth token found, redirecting to login");
       window.location.href = "/";
     }
@@ -76,7 +77,7 @@
     async function loadUserInfo() {
       try {
         // Decode JWT to get user info (simple base64 decode for display)
-        const payload = JSON.parse(atob(authToken.split('.')[1]));
+        const payload = JSON.parse(atob(adminAuthToken.split('.')[1]));
         const userInfoDiv = document.getElementById("userInfo");
         
         // Check different possible group fields in JWT
@@ -132,7 +133,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${authToken}`
+            "Authorization": `Bearer ${adminAuthToken}`
           },
           body: JSON.stringify({ username, groupName })
         });
@@ -164,7 +165,7 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${authToken}`
+            "Authorization": `Bearer ${adminAuthToken}`
           },
           body: JSON.stringify({ username, groupName })
         });
@@ -193,7 +194,7 @@
       try {
         const response = await fetch(`/auth/user-groups/${username}`, {
           headers: {
-            "Authorization": `Bearer ${authToken}`
+            "Authorization": `Bearer ${adminAuthToken}`
           }
         });
 
@@ -221,7 +222,7 @@
       try {
         const response = await fetch("/video/admin/all-videos", {
           headers: {
-            "Authorization": `Bearer ${authToken}`
+            "Authorization": `Bearer ${adminAuthToken}`
           }
         });
 
@@ -260,7 +261,7 @@
         const response = await fetch(`/video/admin/video/${videoId}`, {
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${authToken}`
+            "Authorization": `Bearer ${adminAuthToken}`
           }
         });
 
