@@ -3,7 +3,7 @@ const jwksClient = require("jwks-rsa");
 
 // Configure JWKS client for Cognito
 const client = jwksClient({
-  jwksUri: "https://cognito-idp.YOUR_REGION.amazonaws.com/YOUR_USER_POOL_ID/.well-known/jwks.json"
+  jwksUri: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi/.well-known/jwks.json"
 });
 
 // Function to get signing key for JWT verification
@@ -31,8 +31,8 @@ const authenticateToken = (req, res, next) => {
   // Verify the Cognito JWT token
   jwt.verify(token, getKey, {
     algorithms: ["RS256"],
-    issuer: "https://cognito-idp.YOUR_REGION.amazonaws.com/YOUR_USER_POOL_ID",
-    audience: "YOUR_APP_CLIENT_ID"
+    issuer: "https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_LoqVf6hsi",
+    audience: "e2lgatu20g780tsmitg1usn5"
   }, (err, decoded) => {
     if (err) {
       console.log(`JWT verification failed at URL ${req.url}:`, err.message);
