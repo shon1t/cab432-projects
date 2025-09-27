@@ -67,8 +67,11 @@
     const authToken = localStorage.getItem("authToken");
     
     if (!authToken) {
+      console.log("No auth token found, redirecting to login");
       window.location.href = "/";
     }
+
+    console.log("Auth token found, loading admin page");
 
     // Display current user info
     async function loadUserInfo() {
@@ -77,17 +80,26 @@
         const payload = JSON.parse(atob(authToken.split('.')[1]));
         const userInfoDiv = document.getElementById("userInfo");
         
+        // Check different possible group fields in JWT
+        const groups = payload['cognito:groups'] || payload.groups || [];
+        console.log("Full JWT payload:", payload);
+        console.log("Groups found:", groups);
+        
         userInfoDiv.innerHTML = `
           <h3>Logged in as: ${payload['cognito:username']}</h3>
           <p>Email: ${payload.email}</p>
-          <p>Groups: ${(payload['cognito:groups'] || []).join(', ')}</p>
+          <p>Groups: ${groups.join(', ') || 'None'}</p>
         `;
         
-        // Check if user is actually an admin
-        if (!(payload['cognito:groups'] || []).includes('Admin')) {
+        // Check if user is actually an admin (check both possible group formats)
+        const isAdmin = groups.includes('Admin');
+        console.log("Is admin check:", isAdmin);
+        
+        if (!isAdmin) {
           document.body.innerHTML = `
             <h1>Access Denied</h1>
             <p>You need Admin privileges to access this page.</p>
+            <p>Your groups: ${groups.join(', ') || 'None'}</p>
             <button onclick="window.location.href='/video'">Back to Upload</button>
           `;
         }
