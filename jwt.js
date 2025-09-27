@@ -52,4 +52,4 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = { generateAccessToken, authenticateToken };
+module.exports = { authenticateToken };
