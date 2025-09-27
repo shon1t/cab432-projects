@@ -36,7 +36,7 @@ router.post("/login", async (req, res) => {
   try {
     const response = await cognito.send(command);
     
-    // Check if we got a challenge (temporary password case)
+    // Check if challenged
     if (response.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
       res.json({ 
         challenge: "NEW_PASSWORD_REQUIRED",

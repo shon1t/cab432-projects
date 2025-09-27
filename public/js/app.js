@@ -170,7 +170,7 @@ if (uploadForm) {
         "Authorization": `Bearer ${authToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ s3Key, format, videoId }), // was filename, format
+      body: JSON.stringify({ s3Key, format, videoId }), 
     });
 
     if (transcodeRes.ok) {
@@ -269,16 +269,28 @@ async function loadVideos() {
   }
 }
 
-// Run this automatically when user is on the /video page
-if (window.location.pathname === "/video") {
-  loadVideos();
-}
-
-// Hnadle video list button
+// Handle video list button as a toggle switch
 const videoListButton = document.getElementById("videoListButton");
+const videoListDiv = document.getElementById("videoList");
 
 if (videoListButton) {
-  videoListButton.addEventListener("click", loadVideos);
+  let isVideosVisible = false;
+  
+  videoListButton.addEventListener("click", async () => {
+    if (!isVideosVisible) {
+      // Show videos - load and display them
+      videoListButton.innerText = "Hide Videos";
+      await loadVideos();
+      isVideosVisible = true;
+    } else {
+      // Hide videos - clear the list
+      videoListButton.innerText = "Show Your Videos";
+      if (videoListDiv) {
+        videoListDiv.innerHTML = "";
+      }
+      isVideosVisible = false;
+    }
+  });
 }
 
 // Handle logout button

@@ -1,6 +1,6 @@
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 
-// Configure JWT verifiers for Cognito (matching snippet approach)
+// Configure JWT verifiers for Cognito
 const userPoolId = "ap-southeast-2_LoqVf6hsi";
 const clientId = "e2lgatu20g780tsmitg1usn5";
 
@@ -16,7 +16,7 @@ const accessVerifier = CognitoJwtVerifier.create({
   clientId: clientId,
 });
 
-// Middleware to verify Cognito JWT token (using aws-jwt-verify like the snippet)
+// Middleware to verify Cognito JWT token
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(' ')[1];
@@ -27,7 +27,7 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    // Try to verify as ID token first (most common for authentication)
+    // Try to verify as ID token first 
     const decoded = await idVerifier.verify(token);
     
     console.log(`Cognito ID token verified for user: ${decoded["cognito:username"]} at URL ${req.url}`);
