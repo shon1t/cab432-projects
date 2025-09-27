@@ -133,4 +133,22 @@ router.get("/videos", JWT.authenticateToken, async (req, res) => {
     }
 });
 
+// Generate pre-signed URL for video download
+router.get("/download/:videoId", JWT.authenticateToken, async (req, res) => {
+    try {
+        const videos = await getUserVideos(req.user.username);
+        const video = videos.find(v => v.videoId === req.params.videoId);
+        
+        if (!video || !video.s3OutputKey) {
+            return res.status(404).json({ error: "Video not found or not ready for download" });
+        }
+        
+        const downloadUrl = await getDownloadUrl(video.s3OutputKey);
+        res.json({ downloadUrl });
+    } catch (err) {
+        console.error("Error generating download URL:", err);
+        res.status(500).json({ error: "Could not generate download URL" });
+    }
+});
+
 module.exports = router;

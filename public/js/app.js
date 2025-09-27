@@ -259,13 +259,41 @@ async function loadVideos() {
           <b>Format:</b> ${video.videoFormat || "N/A"}<br>
           <b>Created At:</b> ${video.createdAt}
         </p>
-        ${video.s3OutputKey ? `<a href="${video.s3OutputKey}" target="_blank">Download</a>` : ""}
+        ${video.s3OutputKey ? `<a href="#" onclick="downloadVideo('${video.videoId}')" target="_blank">Download</a>` : ""}
         <hr>
       `;
       listDiv.appendChild(item);
     });
   } catch (err) {
     console.error("Error loading videos:", err);
+  }
+}
+
+// Function to securely download video using pre-signed URLs
+async function downloadVideo(videoId) {
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    alert("You must be logged in first.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/video/download/${videoId}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // Open the pre-signed URL in a new tab
+      window.open(data.downloadUrl, '_blank');
+    } else {
+      console.error("Failed to generate download URL");
+      alert("Failed to generate download link.");
+    }
+  } catch (err) {
+    console.error("Error downloading video:", err);
+    alert("Error downloading video.");
   }
 }
 
