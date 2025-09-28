@@ -18,7 +18,7 @@ app.use("/video", videoRoutes);
 app.use("/outputs", express.static(path.join(__dirname, "outputs")));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Debug: List all registered routes
+// Display all registered API routes
 app._router.stack.forEach(r => {
   if (r.route && r.route.path) {
     console.log(r.route.path, Object.keys(r.route.methods));
