@@ -1,0 +1,13 @@
+{
+  "name": "video-transcoder-worker",
+  "version": "1.0.0",
+  "description": "Worker service for video transcoding",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "dev": "nodemon worker.js"
+  },
+  "keywords": ["video", "transcoding", "worker", "sqs"],
+  "author": "",
+  "license": "ISC"
+}

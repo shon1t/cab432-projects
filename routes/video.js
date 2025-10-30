@@ -1,12 +1,12 @@
 const express = require("express");
 const multer = require("multer");
-const ffmpeg = require("fluent-ffmpeg");
 const JWT = require("../jwt.js");
 
 const path = require("path");
 const fs = require("fs");
 const { uploadToS3, getDownloadUrl, downloadFromS3, getBucketName } = require("../utils/s3.js");
 const { saveVideoMetadata, updateVideoMetadata, getUserVideos, getDbClient } = require("../utils/db.js");
+const { sendTranscodeJob } = require("../utils/queue.js");
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -50,74 +50,45 @@ router.post("/upload", JWT.authenticateToken, upload.single("video"), async (req
     }
 });
 
-// Transcode endpoint, requires authentication
+// Transcode endpoint - Queue job for worker processing
 router.post("/transcode", JWT.authenticateToken, async (req, res) => {
     const inputKey = req.body.s3Key;
     const format = req.body.format || "mp4";
-    const outputFile = `transcoded-${Date.now()}.${format}`;
-    const inputPath = path.join("/tmp", `input-temp-${Date.now()}`);
-    const outputPath = path.join("/tmp", outputFile); // safe temp dir in EC2
-    //const videoId = req.body.videoId;
+    const videoId = req.body.videoId;
+    const owner = req.user.username;
 
     console.log("Transcode request body:", req.body);
 
     try {
-        // Download input from S3 to /tmp
-        await downloadFromS3(inputKey, inputPath);
-
-        // Run FFmpeg
-        const ffmpegCommand = ffmpeg(inputPath).output(outputPath);
-
-        if (format === "webm") {
-            ffmpegCommand.videoCodec("libvpx-vp9").audioCodec("libopus");
-        } else {
-            ffmpegCommand.videoCodec("libx264").audioCodec("aac");
+        // Validate inputs
+        if (!inputKey || !videoId) {
+            return res.status(400).json({ error: "Missing required fields: s3Key or videoId" });
         }
 
-        ffmpegCommand
-            .size("1280x720")
-            .format(format)
-            .on("end", async () => {
-                // Upload transcoded file to S3
-                const fileStream = fs.createReadStream(outputPath);
-                const s3Key = `output/${outputFile}`;
-                await uploadToS3(s3Key, fileStream);
+        // Update video status to "processing"
+        await updateVideoMetadata(owner, videoId, {
+            status: "processing"
+        });
 
-                // Cleanup
-                fs.unlinkSync(inputPath);
-                fs.unlinkSync(outputPath);
+        // Send job to SQS queue for worker to process
+        await sendTranscodeJob({
+            videoId: videoId,
+            s3InputKey: inputKey,
+            owner: owner,
+            format: format
+        });
 
+        console.log(`Transcoding job queued for video ${videoId}`);
 
-                console.log("Update metadata call:", {
-                    owner: req.user.username,
-                    videoId: req.body.videoId,
-                    s3OutputKey: s3Key,
-                    format,
-                    status: "done"
-                    });
-
-                // update metadata in dyanamo
-                await updateVideoMetadata(req.user.username, req.body.videoId, {
-                    s3OutputKey: s3Key,
-                    format: format,
-                    status: "done"
-                })
-
-                console.log("Updating DynamoDB:", { owner: req.user.username, videoId: req.body.videoId, format }); // debug dynamodb
-
-                // Generate signed URL
-                const url = await getDownloadUrl(s3Key);
-                res.json({ message: "Video transcoded successfully", downloadUrl: url });
-            })
-            .on("error", (err) => {
-                console.error("Error during transcoding:", err);
-                res.status(500).json({ error: "Transcoding failed" });
-            })
-            .run();
+        res.json({ 
+            message: "Video queued for transcoding", 
+            videoId: videoId,
+            status: "processing"
+        });
 
     } catch (err) {
-        console.error("Transcoding error:", err);
-        res.status(500).json({ error: "Could not process video" });
+        console.error("Error queueing transcoding job:", err);
+        res.status(500).json({ error: "Could not queue video for transcoding" });
     }
 });
 
