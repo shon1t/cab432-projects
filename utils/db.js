@@ -45,22 +45,47 @@ async function saveVideoMetadata({ s3Key, owner }) {
 }
 
 // Update metadata after transcoding
-async function updateVideoMetadata(owner, videoId, { s3OutputKey, format, status }) {
+async function updateVideoMetadata(owner, videoId, updates) {
     const { client, config } = await getDbClient();
+    
+    // Build dynamic update expression based on provided fields
+    const updateParts = [];
+    const expressionAttributeNames = {};
+    const expressionAttributeValues = {};
+    
+    if (updates.s3OutputKey !== undefined) {
+        updateParts.push("s3OutputKey = :o");
+        expressionAttributeValues[":o"] = { S: updates.s3OutputKey };
+    }
+    
+    if (updates.format !== undefined) {
+        updateParts.push("videoFormat = :f");
+        expressionAttributeValues[":f"] = { S: updates.format };
+    }
+    
+    if (updates.status !== undefined) {
+        updateParts.push("#st = :s");
+        expressionAttributeNames["#st"] = "status";
+        expressionAttributeValues[":s"] = { S: updates.status };
+    }
+    
+    // Only proceed if there are fields to update
+    if (updateParts.length === 0) {
+        console.log("No fields to update");
+        return;
+    }
+    
     const command = new UpdateItemCommand({
         TableName: config.DYNAMODB_TABLE,
         Key: { 
             owner: { S: owner },
             videoId: { S: videoId } 
         },
-        UpdateExpression: "SET s3OutputKey = :o, videoFormat = :f, #st = :s",
-        ExpressionAttributeNames: { "#st": "status" },
-        ExpressionAttributeValues: {
-            ":o": { S: s3OutputKey },
-            ":f": { S: format },
-            ":s": { S: status }
-        }
+        UpdateExpression: `SET ${updateParts.join(", ")}`,
+        ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined,
+        ExpressionAttributeValues: expressionAttributeValues
     });
+    
     await client.send(command);
 }
 
