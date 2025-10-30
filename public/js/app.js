@@ -257,9 +257,10 @@ async function loadVideos() {
           <b>Input S3 Key:</b> ${video.s3InputKey || "N/A"}<br>
           <b>Output S3 Key:</b> ${video.s3OutputKey || "N/A"}<br>
           <b>Format:</b> ${video.videoFormat || "N/A"}<br>
+          <b>Status:</b> ${video.status || "N/A"}<br>
           <b>Created At:</b> ${video.createdAt}
         </p>
-        ${video.s3OutputKey ? `<a href="#" onclick="downloadVideo('${video.videoId}')" target="_blank">Download</a>` : ""}
+        ${video.s3OutputKey ? `<a href="#" onclick="downloadVideo('${video.videoId}'); return false;">Download</a>` : "Processing..."}
         <hr>
       `;
       listDiv.appendChild(item);
@@ -271,6 +272,9 @@ async function loadVideos() {
 
 // Function to securely download video using pre-signed URLs
 async function downloadVideo(videoId) {
+  // Prevent default link behavior
+  event.preventDefault();
+  
   const token = localStorage.getItem("authToken");
   if (!token) {
     alert("You must be logged in first.");
