@@ -302,27 +302,16 @@ async function downloadVideo(videoId) {
   }
 }
 
-// Handle video list button as a toggle switch
+// Handle video list button - always refresh videos when clicked
 const videoListButton = document.getElementById("videoListButton");
 const videoListDiv = document.getElementById("videoList");
 
 if (videoListButton) {
-  let isVideosVisible = false;
-  
   videoListButton.addEventListener("click", async () => {
-    if (!isVideosVisible) {
-      // Show videos - load and display them
-      videoListButton.innerText = "Hide Videos";
-      await loadVideos();
-      isVideosVisible = true;
-    } else {
-      // Hide videos - clear the list
-      videoListButton.innerText = "Show Your Videos";
-      if (videoListDiv) {
-        videoListDiv.innerHTML = "";
-      }
-      isVideosVisible = false;
-    }
+    // Always reload videos to show latest status
+    videoListButton.innerText = "Refreshing...";
+    await loadVideos();
+    videoListButton.innerText = "Refresh Videos";
   });
 }
 
