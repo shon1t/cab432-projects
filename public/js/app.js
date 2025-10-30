@@ -175,10 +175,11 @@ if (uploadForm) {
 
     if (transcodeRes.ok) {
       const transcodeData = await transcodeRes.json();
-      document.getElementById("status").innerText = "Transcoding complete!";
-      document.getElementById("downloadLink").innerHTML = `<a href="${transcodeData.downloadUrl}" download>Download Video</a>`;
+      document.getElementById("status").innerText = "Video queued for transcoding! Check 'Load Videos' to see status.";
+      // Remove download link since transcoding is now async
+      document.getElementById("downloadLink").innerHTML = "";
       } else {
-        document.getElementById("status").innerText = "Transcoding failed.";
+        document.getElementById("status").innerText = "Failed to queue transcoding.";
       }
     });
 }
